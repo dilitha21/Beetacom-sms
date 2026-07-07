@@ -174,19 +174,22 @@ if (empty($_SESSION['csrf_token'])) {
     <style>
         /* 1. Define your global color palette */
         :root {
-            --bg-main: #121212;         /* Deep, dark gray (better than pure black) */
-            --bg-surface: #1e1e1e;      /* Slightly lighter gray for cards/panels */
-            --text-primary: #e0e0e0;    /* Off-white for high readability */
-            --text-secondary: #a0a0a0;  /* Dimmer gray for less important text */
-            --accent-color: #bb86fc;    /* A vibrant accent color for buttons/links */
-            --border-color: #333333;    /* Subtle borders */
+            --bg-main: #f4f7fb;       /* Soft blue-gray background */
+            --bg-surface: #ffffff;    /* Pure white for cards/panels */
+            --bg-sidebar: #ebf0f7;    /* Slightly darker for sidebar contrast */
+            --text-primary: #1e293b;  /* Dark slate for high contrast */
+            --text-secondary: #64748b;/* Muted slate for labels/metadata */
+            --accent-color: #6366f1;   /* Vibrant Indigo */
+            --border-color: #e2e8f0;   /* Subtle borders */
+            --border-radius: 12px;
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
         }
 
         /* 2. Apply the baseline to the whole page */
         body {
             background-color: var(--bg-main);
             color: var(--text-primary);
-            font-family: system-ui, -apple-system, sans-serif;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
             min-height: 100vh;
             margin: 0;
             padding: 20px;
@@ -195,10 +198,11 @@ if (empty($_SESSION['csrf_token'])) {
             padding-bottom: 3rem;
         }
 
-        /* 3. Force headings to pop with pure white */
+        /* 3. Force headings to pop with dark slate */
         h1, h2, h3, h4, h5, h6 {
-            color: #ffffff; 
+            color: var(--text-primary); 
             margin-top: 0;
+            font-weight: 700;
         }
 
         /* 4. Fix vanishing text in input fields and forms */
@@ -214,13 +218,13 @@ if (empty($_SESSION['csrf_token'])) {
         .navbar-custom {
             background-color: var(--bg-surface);
             border-bottom: 1px solid var(--border-color);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            box-shadow: var(--shadow-md);
             padding: 10px 20px;
         }
         .navbar-brand {
             font-weight: 700;
             letter-spacing: -0.5px;
-            color: #ffffff !important;
+            color: var(--text-primary) !important;
         }
         .nav-link {
             color: var(--text-secondary) !important;
@@ -235,14 +239,14 @@ if (empty($_SESSION['csrf_token'])) {
         .form-card {
             background-color: var(--bg-surface);
             border: 1px solid var(--border-color);
-            border-radius: 8px;
+            border-radius: var(--border-radius);
             overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4);
+            box-shadow: var(--shadow-md);
             margin-top: 20px;
         }
 
         .card-header-custom {
-            background-color: rgba(255, 255, 255, 0.02);
+            background-color: rgba(0, 0, 0, 0.01);
             border-bottom: 1px solid var(--border-color);
             padding: 1.5rem 2rem;
         }
@@ -275,21 +279,21 @@ if (empty($_SESSION['csrf_token'])) {
             background-color: var(--bg-main);
             border: 1px solid var(--border-color);
             color: var(--text-primary);
-            border-radius: 4px;
+            border-radius: 8px;
             padding: 0.6rem 0.85rem;
             transition: all 0.2s ease;
         }
 
         .form-control:focus, .form-select:focus {
-            background-color: var(--bg-main);
+            background-color: var(--bg-surface);
             border-color: var(--accent-color);
             color: var(--text-primary);
-            box-shadow: 0 0 0 3px rgba(187, 134, 252, 0.2);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
             outline: none;
         }
 
         .form-control[readonly] {
-            background-color: var(--bg-main);
+            background-color: var(--bg-sidebar);
             color: var(--text-secondary) !important;
             border-color: var(--border-color);
             cursor: not-allowed;
@@ -298,22 +302,25 @@ if (empty($_SESSION['csrf_token'])) {
 
         /* Checkbox styling */
         .form-check-input {
-            background-color: var(--bg-main);
-            border: 1px solid var(--border-color);
-            width: 1.15em;
-            height: 1.15em;
-            margin-top: 0.2em;
+            background-color: #ffffff;
+            border: 2px solid #94a3b8; /* Strong slate outline */
+            width: 1.25em;
+            height: 1.25em;
+            margin-top: 0.15em;
             cursor: pointer;
             transition: all 0.2s ease;
+        }
+        .form-check-input:hover {
+            border-color: var(--accent-color);
         }
         .form-check-input:checked {
             background-color: var(--accent-color);
             border-color: var(--accent-color);
-            box-shadow: 0 0 8px rgba(187, 134, 252, 0.4);
+            box-shadow: 0 0 8px rgba(99, 102, 241, 0.4);
         }
         .form-check-input:focus {
             outline: none;
-            box-shadow: 0 0 0 3px rgba(187, 134, 252, 0.2);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
         }
         .form-check-label {
             font-size: 0.9rem;
@@ -321,19 +328,32 @@ if (empty($_SESSION['csrf_token'])) {
             cursor: pointer;
         }
 
+        /* Restore proper Bootstrap switch width/height style */
+        .form-switch .form-check-input {
+            width: 2.25em !important;
+            height: 1.25em !important;
+            border-radius: 2em !important;
+            background-position: left center;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%2394a3b8'/%3e%3c/svg%3e") !important;
+        }
+        .form-switch .form-check-input:checked {
+            background-position: right center;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23fff'/%3e%3c/svg%3e") !important;
+        }
+
         /* Action Buttons */
         .btn-submit {
             background-color: var(--accent-color);
-            color: #000000; /* Dark text on a bright button works best */
+            color: #ffffff; /* White text on Indigo works best */
             border: none;
-            border-radius: 4px;
+            border-radius: 8px;
             padding: 0.75rem 2rem;
             font-weight: bold;
             cursor: pointer;
             transition: background-color 0.2s ease;
         }
         .btn-submit:hover {
-            background-color: #9965f4;
+            background-color: #4f46e5;
         }
 
         .btn-reset {
@@ -342,12 +362,12 @@ if (empty($_SESSION['csrf_token'])) {
             color: var(--text-primary);
             font-weight: 500;
             padding: 0.75rem 2rem;
-            border-radius: 4px;
+            border-radius: 8px;
             transition: all 0.2s ease;
         }
         .btn-reset:hover {
-            background-color: var(--border-color);
-            color: #ffffff;
+            background-color: var(--bg-sidebar);
+            color: var(--text-primary);
         }
 
         /* Course category wrapper cards */
@@ -361,19 +381,18 @@ if (empty($_SESSION['csrf_token'])) {
 
         /* Alert stylings */
         .alert-custom-success {
-            background-color: rgba(16, 185, 129, 0.15);
-            border: 1px solid rgba(16, 185, 129, 0.3);
-            color: #a7f3d0;
-            border-radius: 4px;
+            background-color: #d1fae5;
+            border: 1px solid rgba(16, 185, 129, 0.25);
+            color: #10b981;
+            border-radius: 8px;
         }
         .alert-custom-error {
-            background-color: rgba(239, 68, 68, 0.15);
-            border: 1px solid rgba(239, 68, 68, 0.3);
-            color: #fca5a5;
-            border-radius: 4px;
+            background-color: #fee2e2;
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            color: #ef4444;
+            border-radius: 8px;
         }
 
-        /* High-contrast dark mode overrides */
         .text-muted {
             color: var(--text-secondary) !important;
         }
@@ -401,14 +420,14 @@ if (empty($_SESSION['csrf_token'])) {
                         <a class="nav-link" href="dashboard.php"><i class="bi bi-speedometer2 me-1"></i>Dashboard</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link active" href="add_student.php"><i class="bi bi-person-plus me-1"></i>Add Student</a>
+                        <a class="nav-link active" href="add_student.php"><i class="bi bi-person-plus me-1"></i>Register</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="bulk_grading.php"><i class="bi bi-journal-plus me-1"></i>Grades</a>
                     </li>
                 </ul>
                 <div class="d-flex align-items-center gap-3">
-                    <span class="text-light small">
-                        <i class="bi bi-person-circle me-1 text-primary"></i><?php echo htmlspecialchars($_SESSION['username']); ?> 
-                        <span class="badge bg-secondary ms-1"><?php echo htmlspecialchars($_SESSION['role']); ?></span>
-                    </span>
+                    <a href="profile.php" class="nav-link small"><i class="bi bi-gear-fill me-1"></i>My Profile</a>
                     <a href="logout.php" class="btn btn-outline-danger btn-sm rounded-pill px-3">
                         <i class="bi bi-box-arrow-right me-1"></i>Logout
                     </a>
@@ -571,7 +590,7 @@ if (empty($_SESSION['csrf_token'])) {
                                 <!-- Educational Qualifications -->
                                 <div class="col-lg-4 col-md-6">
                                     <div class="category-box">
-                                        <h6 class="fw-bold mb-3 text-light border-bottom border-secondary border-opacity-25 pb-2">
+                                        <h6 class="fw-bold mb-3 text-secondary border-bottom border-secondary border-opacity-25 pb-2">
                                             <i class="bi bi-book me-1 text-primary"></i>Education
                                         </h6>
                                         <div class="d-flex flex-column gap-2">
@@ -614,7 +633,7 @@ if (empty($_SESSION['csrf_token'])) {
                                 <!-- NVQ Courses -->
                                 <div class="col-lg-4 col-md-6">
                                     <div class="category-box">
-                                        <h6 class="fw-bold mb-3 text-light border-bottom border-secondary border-opacity-25 pb-2">
+                                        <h6 class="fw-bold mb-3 text-secondary border-bottom border-secondary border-opacity-25 pb-2">
                                             <i class="bi bi-award me-1 text-primary"></i>NVQ Courses
                                         </h6>
                                         <div class="d-flex flex-column gap-2">
@@ -641,7 +660,7 @@ if (empty($_SESSION['csrf_token'])) {
                                 <!-- Non NVQ Courses -->
                                 <div class="col-lg-4 col-md-12">
                                     <div class="category-box">
-                                        <h6 class="fw-bold mb-3 text-light border-bottom border-secondary border-opacity-25 pb-2">
+                                        <h6 class="fw-bold mb-3 text-secondary border-bottom border-secondary border-opacity-25 pb-2">
                                             <i class="bi bi-box me-1 text-primary"></i>Non-NVQ Courses
                                         </h6>
                                         <div class="d-flex flex-column gap-2">

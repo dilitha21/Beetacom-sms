@@ -76,19 +76,19 @@ if (empty($_SESSION['csrf_token'])) {
     <style>
         /* 1. Define your global color palette */
         :root {
-            --bg-main: #121212;         /* Deep, dark gray (better than pure black) */
-            --bg-surface: #1e1e1e;      /* Slightly lighter gray for cards/panels */
-            --text-primary: #e0e0e0;    /* Off-white for high readability */
-            --text-secondary: #a0a0a0;  /* Dimmer gray for less important text */
-            --accent-color: #bb86fc;    /* A vibrant accent color for buttons/links */
-            --border-color: #333333;    /* Subtle borders */
+            --bg-main: #f4f7fb;       /* Soft blue-gray background */
+            --bg-surface: #ffffff;    /* Pure white for cards/panels */
+            --text-primary: #1e293b;  /* Dark slate for high contrast */
+            --text-secondary: #64748b;/* Muted slate for labels/metadata */
+            --accent-color: #6366f1;   /* Vibrant Indigo */
+            --border-color: #e2e8f0;   /* Subtle borders */
         }
 
         /* 2. Apply the baseline to the whole page */
         body {
             background-color: var(--bg-main);
             color: var(--text-primary);
-            font-family: system-ui, -apple-system, sans-serif;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -99,10 +99,11 @@ if (empty($_SESSION['csrf_token'])) {
             position: relative;
         }
 
-        /* 3. Force headings to pop with pure white */
+        /* 3. Force headings to pop with dark slate */
         h1, h2, h3, h4, h5, h6 {
-            color: #ffffff; 
+            color: var(--text-primary); 
             margin-top: 0;
+            font-weight: 700;
         }
 
         /* 4. Fix vanishing text in input fields and forms */
@@ -117,16 +118,17 @@ if (empty($_SESSION['csrf_token'])) {
         .login-card {
             background-color: var(--bg-surface);
             border: 1px solid var(--border-color);
-            border-radius: 8px;
+            border-radius: 12px;
             padding: 3rem 2.5rem;
             width: 100%;
             max-width: 460px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4);
-            transition: transform 0.2s ease;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
         .login-card:hover {
             transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.08);
         }
 
         .form-label {
@@ -140,24 +142,24 @@ if (empty($_SESSION['csrf_token'])) {
             background-color: var(--bg-main);
             border: 1px solid var(--border-color);
             color: var(--text-secondary);
-            border-top-left-radius: 4px;
-            border-bottom-left-radius: 4px;
+            border-top-left-radius: 8px;
+            border-bottom-left-radius: 8px;
         }
 
         .form-control {
-            background-color: var(--bg-main);
+            background-color: var(--bg-surface);
             border: 1px solid var(--border-color);
             color: var(--text-primary) !important;
-            border-top-right-radius: 4px;
-            border-bottom-right-radius: 4px;
+            border-top-right-radius: 8px;
+            border-bottom-right-radius: 8px;
             padding: 0.75rem 1rem;
             transition: all 0.2s ease;
         }
 
         .form-control:focus {
-            background-color: var(--bg-main);
+            background-color: var(--bg-surface);
             border-color: var(--accent-color);
-            box-shadow: 0 0 0 3px rgba(187, 134, 252, 0.2);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
             outline: none;
         }
 
@@ -167,9 +169,9 @@ if (empty($_SESSION['csrf_token'])) {
 
         .btn-login {
             background-color: var(--accent-color);
-            color: #000000; /* Dark text on a bright button works best */
+            color: #ffffff; /* White text on Indigo works best */
             border: none;
-            border-radius: 4px;
+            border-radius: 8px;
             padding: 0.75rem 1.5rem;
             font-weight: bold;
             width: 100%;
@@ -178,14 +180,14 @@ if (empty($_SESSION['csrf_token'])) {
         }
 
         .btn-login:hover {
-            background-color: #9965f4;
+            background-color: #4f46e5;
         }
 
         .alert-custom {
-            background-color: rgba(239, 68, 68, 0.1);
+            background-color: #fee2e2;
             border: 1px solid rgba(239, 68, 68, 0.25);
-            color: #fca5a5;
-            border-radius: 4px;
+            color: #ef4444;
+            border-radius: 8px;
             font-size: 0.875rem;
         }
 

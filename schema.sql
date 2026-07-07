@@ -109,3 +109,18 @@ CREATE TABLE IF NOT EXISTS `payment_records` (
     CONSTRAINT `fk_payment_records_student` FOREIGN KEY (`student_id`) 
         REFERENCES `students` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 5. Create the `exam_results` table
+CREATE TABLE IF NOT EXISTS `exam_results` (
+    `exam_id` INT AUTO_INCREMENT,
+    `student_id` INT NOT NULL,
+    `course_code` VARCHAR(10) NOT NULL,
+    `exam_name` VARCHAR(100) NOT NULL,
+    `exam_date` DATE NOT NULL,
+    `status` ENUM('Pass', 'Fail', 'Pending') NOT NULL,
+    `mark` DECIMAL(5,2) NULL,
+    PRIMARY KEY (`exam_id`),
+    CONSTRAINT `fk_exam_results_student` FOREIGN KEY (`student_id`) 
+        REFERENCES `students` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+

@@ -57,31 +57,37 @@ try {
     <style>
         /* 1. Define your global color palette */
         :root {
-            --bg-main: #121212;         /* Deep, dark gray (better than pure black) */
-            --bg-surface: #1e1e1e;      /* Slightly lighter gray for cards/panels */
-            --text-primary: #e0e0e0;    /* Off-white for high readability */
-            --text-secondary: #a0a0a0;  /* Dimmer gray for less important text */
-            --accent-color: #bb86fc;    /* A vibrant accent color for buttons/links */
-            --border-color: #333333;    /* Subtle borders */
+            --bg-main: #f4f7fb;       /* Soft blue-gray background */
+            --bg-surface: #ffffff;    /* Pure white for cards/panels */
+            --bg-sidebar: #ebf0f7;    /* Slightly darker for sidebar contrast */
+            --text-primary: #1e293b;  /* Dark slate for high contrast */
+            --text-secondary: #64748b;/* Muted slate for labels/metadata */
+            --accent-color: #6366f1;   /* Vibrant Indigo */
+            --border-color: #e2e8f0;   /* Subtle borders */
+            --border-radius: 12px;
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+            --shadow-hover: 0 10px 15px -3px rgba(0,0,0,0.08);
         }
 
         /* 2. Apply the baseline to the whole page */
         body {
             background-color: var(--bg-main);
             color: var(--text-primary);
-            font-family: system-ui, -apple-system, sans-serif;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
             min-height: 100vh;
             margin: 0;
             padding: 20px;
             overflow-x: hidden;
             position: relative;
             padding-bottom: 3rem;
+            line-height: 1.6;
         }
 
-        /* 3. Force headings to pop with pure white */
+        /* 3. Force headings to pop with dark slate */
         h1, h2, h3, h4, h5, h6 {
-            color: #ffffff; 
+            color: var(--text-primary); 
             margin-top: 0;
+            font-weight: 700;
         }
 
         /* 4. Fix vanishing text in input fields and forms */
@@ -97,13 +103,13 @@ try {
         .navbar-custom {
             background-color: var(--bg-surface);
             border-bottom: 1px solid var(--border-color);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            box-shadow: var(--shadow-md);
             padding: 10px 20px;
         }
         .navbar-brand {
             font-weight: 700;
             letter-spacing: -0.5px;
-            color: #ffffff !important;
+            color: var(--text-primary) !important;
         }
         .nav-link {
             color: var(--text-secondary) !important;
@@ -123,9 +129,9 @@ try {
         .search-card {
             background-color: var(--bg-surface);
             border: 1px solid var(--border-color);
-            border-radius: 8px;
+            border-radius: var(--border-radius);
             padding: 2rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4);
+            box-shadow: var(--shadow-md);
             margin-bottom: 2rem;
         }
 
@@ -133,16 +139,16 @@ try {
             background-color: var(--bg-main);
             border: 1px solid var(--border-color);
             color: var(--text-primary);
-            border-radius: 4px 0 0 4px;
+            border-radius: 8px 0 0 8px;
             padding: 0.8rem 1.2rem;
             font-size: 1.05rem;
             transition: all 0.2s ease;
         }
         .search-control:focus {
-            background-color: var(--bg-main);
+            background-color: var(--bg-surface);
             border-color: var(--accent-color);
             color: var(--text-primary);
-            box-shadow: 0 0 0 3px rgba(187, 134, 252, 0.2);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
             outline: none;
         }
         .search-control::placeholder {
@@ -151,42 +157,42 @@ try {
 
         .btn-search {
             background-color: var(--accent-color);
-            color: #000000;
+            color: #ffffff;
             border: none;
             font-weight: bold;
             padding: 0.8rem 2rem;
-            border-radius: 0 4px 4px 0;
+            border-radius: 0 8px 8px 0;
             cursor: pointer;
             transition: background-color 0.2s ease;
         }
         .btn-search:hover {
-            background-color: #9965f4;
+            background-color: #4f46e5;
         }
 
         .btn-clear-search {
             background-color: var(--bg-surface);
             border: 1px solid var(--border-color);
             color: var(--text-secondary);
-            border-radius: 4px;
+            border-radius: 8px;
             padding: 0.8rem 1.2rem;
             transition: all 0.2s ease;
         }
         .btn-clear-search:hover {
-            background-color: var(--border-color);
-            color: #ffffff;
+            background-color: var(--bg-sidebar);
+            color: var(--text-primary);
         }
 
         /* Data Card */
         .data-card {
             background-color: var(--bg-surface);
             border: 1px solid var(--border-color);
-            border-radius: 8px;
+            border-radius: var(--border-radius);
             overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4);
+            box-shadow: var(--shadow-md);
         }
 
         .data-card-header {
-            background-color: rgba(255, 255, 255, 0.02);
+            background-color: rgba(0, 0, 0, 0.01);
             border-bottom: 1px solid var(--border-color);
             padding: 1.25rem 2rem;
             display: flex;
@@ -202,13 +208,13 @@ try {
             color: var(--text-primary);
         }
         .table-custom th {
-            background-color: var(--bg-main);
+            background-color: var(--bg-sidebar);
             border-bottom: 1px solid var(--border-color);
             color: var(--text-secondary);
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            font-weight: 700;
+            letter-spacing: 0.05em;
+            font-weight: 600;
             padding: 1.25rem 1.5rem;
         }
         .table-custom td {
@@ -218,19 +224,20 @@ try {
             font-size: 0.95rem;
         }
         .table-striped tbody tr:nth-of-type(odd) {
-            background-color: rgba(255, 255, 255, 0.01);
+            background-color: #f8fafc;
         }
         .table-custom tbody tr {
             transition: background-color 0.2s ease;
         }
         .table-custom tbody tr:hover {
-            background-color: rgba(187, 134, 252, 0.05) !important;
+            background-color: rgba(99, 102, 241, 0.05) !important;
+            cursor: pointer;
         }
 
         /* Badges */
         .badge-historical {
-            background-color: var(--bg-main);
-            color: #f59e0b;
+            background-color: var(--bg-sidebar);
+            color: #d97706; /* Amber Dark */
             border: 1px solid var(--border-color);
             padding: 0.25em 0.75em;
             border-radius: 6px;
@@ -238,9 +245,9 @@ try {
             font-weight: 500;
         }
         .badge-active {
-            background-color: rgba(16, 185, 129, 0.15);
-            color: #a7f3d0;
-            border: 1px solid rgba(16, 185, 129, 0.3);
+            background-color: #d1fae5; /* Emerald Light BG */
+            color: #10b981; /* Emerald Green */
+            border: 1px solid rgba(16, 185, 129, 0.25);
             padding: 0.25em 0.75em;
             border-radius: 6px;
             font-size: 0.75rem;
@@ -259,13 +266,12 @@ try {
         }
 
         .alert-custom-error {
-            background-color: rgba(239, 68, 68, 0.15);
-            border: 1px solid rgba(239, 68, 68, 0.3);
-            color: #fca5a5;
-            border-radius: 4px;
+            background-color: #fee2e2;
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            color: #ef4444;
+            border-radius: 8px;
         }
 
-        /* High-contrast dark mode overrides */
         .text-muted {
             color: var(--text-secondary) !important;
         }
@@ -292,14 +298,14 @@ try {
                         <a class="nav-link active" href="dashboard.php"><i class="bi bi-speedometer2 me-1"></i>Dashboard</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="add_student.php"><i class="bi bi-person-plus me-1"></i>Add Student</a>
+                        <a class="nav-link" href="add_student.php"><i class="bi bi-person-plus me-1"></i>Register</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="bulk_grading.php"><i class="bi bi-journal-plus me-1"></i>Grades</a>
                     </li>
                 </ul>
                 <div class="d-flex align-items-center gap-3">
-                    <span class="text-light small">
-                        <i class="bi bi-person-circle me-1 text-primary"></i><?php echo htmlspecialchars($_SESSION['username']); ?> 
-                        <span class="badge bg-secondary ms-1"><?php echo htmlspecialchars($_SESSION['role']); ?></span>
-                    </span>
+                    <a href="profile.php" class="nav-link small"><i class="bi bi-gear-fill me-1"></i>My Profile</a>
                     <a href="logout.php" class="btn btn-outline-danger btn-sm rounded-pill px-3">
                         <i class="bi bi-box-arrow-right me-1"></i>Logout
                     </a>
@@ -318,28 +324,64 @@ try {
             </div>
         <?php endif; ?>
 
-        <!-- Search Bar Section -->
-        <div class="search-card">
-            <h5 class="mb-3 fw-semibold"><i class="bi bi-search me-2 text-primary"></i>Find Student Records</h5>
-            <form action="dashboard.php" method="GET">
-                <div class="row g-2">
-                    <div class="col">
-                        <div class="input-group">
-                            <input type="text" name="search" class="form-control search-control" placeholder="Search by Student Name, NIC, or Registration Number..." value="<?php echo htmlspecialchars($search_query); ?>" autocomplete="off">
-                            <button class="btn btn-search" type="submit">
-                                <i class="bi bi-search me-2"></i>Search
-                            </button>
+        <!-- Search & Export Grid Section -->
+        <div class="row g-4 mb-4">
+            <div class="<?php echo ($_SESSION['role'] === 'super_admin') ? 'col-lg-8' : 'col-12'; ?>">
+                <!-- Search Bar Section -->
+                <div class="search-card h-100 mb-0">
+                    <h5 class="mb-3 fw-semibold"><i class="bi bi-search me-2 text-primary"></i>Find Student Records</h5>
+                    <form action="dashboard.php" method="GET">
+                        <div class="row g-2">
+                            <div class="col">
+                                <div class="input-group">
+                                    <input type="text" name="search" class="form-control search-control" placeholder="Search by Student Name, NIC, or Registration Number..." value="<?php echo htmlspecialchars($search_query); ?>" autocomplete="off">
+                                    <button class="btn btn-search" type="submit">
+                                        <i class="bi bi-search me-2"></i>Search
+                                    </button>
+                                </div>
+                            </div>
+                            <?php if ($search_query !== ''): ?>
+                                <div class="col-auto">
+                                    <a href="dashboard.php" class="btn btn-clear-search d-flex align-items-center gap-1">
+                                        <i class="bi bi-x-circle"></i> Clear
+                                    </a>
+                                </div>
+                            <?php endif; ?>
                         </div>
-                    </div>
-                    <?php if ($search_query !== ''): ?>
-                        <div class="col-auto">
-                            <a href="dashboard.php" class="btn btn-clear-search d-flex align-items-center gap-1">
-                                <i class="bi bi-x-circle"></i> Clear
-                            </a>
-                        </div>
-                    <?php endif; ?>
+                    </form>
                 </div>
-            </form>
+            </div>
+            
+            <?php if ($_SESSION['role'] === 'super_admin'): ?>
+                <div class="col-lg-4">
+                    <!-- Export Batch Data Section -->
+                    <div class="search-card h-100 mb-0">
+                        <h5 class="mb-3 fw-semibold"><i class="bi bi-file-earmark-spreadsheet me-2 text-primary"></i>Export Batch Data</h5>
+                        <form action="export_batch.php" method="GET">
+                            <div class="d-flex gap-2 align-items-end">
+                                <div class="flex-grow-1">
+                                    <label for="export_batch_year" class="form-label mb-1 small text-muted">Batch Year</label>
+                                    <select class="form-select w-100" id="export_batch_year" name="batch_year" required>
+                                        <option value="" disabled selected>Select Year</option>
+                                        <?php
+                                        $current_short = (int)date('y');
+                                        $start_year = 24;
+                                        $end_year = max($current_short + 10, 30);
+                                        for ($y = $start_year; $y <= $end_year; $y++) {
+                                            $padded_y = str_pad($y, 2, '0', STR_PAD_LEFT);
+                                            echo "<option value=\"$padded_y\">20$padded_y</option>";
+                                        }
+                                        ?>
+                                    </select>
+                                </div>
+                                <button class="btn btn-accent px-3 py-2 d-flex align-items-center gap-1" style="height: 40px;" type="submit">
+                                    <i class="bi bi-download"></i> Export
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            <?php endif; ?>
         </div>
 
         <!-- Student Data Table Section -->

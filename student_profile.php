@@ -187,8 +187,13 @@ if ($student && empty($error_msg)) {
         $stmt = $pdo->prepare("SELECT * FROM payment_records WHERE student_id = :id ORDER BY installment_number ASC");
         $stmt->execute([':id' => $student_id]);
         $receipts = $stmt->fetchAll();
+
+        // Fetch exam results
+        $stmt = $pdo->prepare("SELECT * FROM exam_results WHERE student_id = :id ORDER BY exam_date DESC, exam_id DESC");
+        $stmt->execute([':id' => $student_id]);
+        $exams = $stmt->fetchAll();
     } catch (\PDOException $e) {
-        $error_msg = "Failed to retrieve payment records: " . htmlspecialchars($e->getMessage());
+        $error_msg = "Failed to retrieve payment/exam records: " . htmlspecialchars($e->getMessage());
     }
 }
 
@@ -210,19 +215,22 @@ if (empty($_SESSION['csrf_token'])) {
     <style>
         /* 1. Define your global color palette */
         :root {
-            --bg-main: #121212;         /* Deep, dark gray */
-            --bg-surface: #1e1e1e;      /* Slightly lighter gray for cards/panels */
-            --text-primary: #e0e0e0;    /* Off-white for high readability */
-            --text-secondary: #a0a0a0;  /* Dimmer gray for less important text */
-            --accent-color: #bb86fc;    /* A vibrant accent color for buttons/links */
-            --border-color: #333333;    /* Subtle borders */
+            --bg-main: #f4f7fb;       /* Soft blue-gray background */
+            --bg-surface: #ffffff;    /* Pure white for cards/panels */
+            --bg-sidebar: #ebf0f7;    /* Slightly darker for sidebar contrast */
+            --text-primary: #1e293b;  /* Dark slate for high contrast */
+            --text-secondary: #64748b;/* Muted slate for labels/metadata */
+            --accent-color: #6366f1;   /* Vibrant Indigo */
+            --border-color: #e2e8f0;   /* Subtle borders */
+            --border-radius: 12px;
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
         }
 
         /* 2. Apply the baseline to the whole page */
         body {
             background-color: var(--bg-main);
             color: var(--text-primary);
-            font-family: system-ui, -apple-system, sans-serif;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
             min-height: 100vh;
             margin: 0;
             padding: 20px;
@@ -231,10 +239,11 @@ if (empty($_SESSION['csrf_token'])) {
             padding-bottom: 3rem;
         }
 
-        /* 3. Force headings to pop with pure white */
+        /* 3. Force headings to pop with dark slate */
         h1, h2, h3, h4, h5, h6 {
-            color: #ffffff; 
+            color: var(--text-primary); 
             margin-top: 0;
+            font-weight: 700;
         }
 
         /* 4. Inputs and dropdowns */
@@ -243,11 +252,11 @@ if (empty($_SESSION['csrf_token'])) {
             color: var(--text-primary) !important;
             border: 1px solid var(--border-color) !important;
             padding: 10px;
-            border-radius: 4px;
+            border-radius: 8px;
         }
         input:focus, select:focus {
             border-color: var(--accent-color) !important;
-            box-shadow: 0 0 0 3px rgba(187, 134, 252, 0.2) !important;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2) !important;
             outline: none !important;
         }
 
@@ -255,13 +264,13 @@ if (empty($_SESSION['csrf_token'])) {
         .navbar-custom {
             background-color: var(--bg-surface);
             border-bottom: 1px solid var(--border-color);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            box-shadow: var(--shadow-md);
             padding: 10px 20px;
         }
         .navbar-brand {
             font-weight: 700;
             letter-spacing: -0.5px;
-            color: #ffffff !important;
+            color: var(--text-primary) !important;
         }
         .nav-link {
             color: var(--text-secondary) !important;
@@ -276,14 +285,14 @@ if (empty($_SESSION['csrf_token'])) {
         .profile-card {
             background-color: var(--bg-surface);
             border: 1px solid var(--border-color);
-            border-radius: 8px;
+            border-radius: var(--border-radius);
             overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4);
+            box-shadow: var(--shadow-md);
             margin-top: 20px;
         }
 
         .profile-header {
-            background-color: rgba(255, 255, 255, 0.02);
+            background-color: rgba(0, 0, 0, 0.01);
             border-bottom: 1px solid var(--border-color);
             padding: 2rem;
         }
@@ -317,9 +326,9 @@ if (empty($_SESSION['csrf_token'])) {
 
         /* Badges */
         .badge-tag {
-            background-color: rgba(187, 134, 252, 0.12);
+            background-color: rgba(99, 102, 241, 0.12);
             color: var(--accent-color);
-            border: 1px solid rgba(187, 134, 252, 0.25);
+            border: 1px solid rgba(99, 102, 241, 0.25);
             padding: 0.4em 0.8em;
             border-radius: 6px;
             font-size: 0.85rem;
@@ -330,8 +339,8 @@ if (empty($_SESSION['csrf_token'])) {
         }
 
         .badge-tag-qual {
-            background-color: rgba(16, 185, 129, 0.12);
-            color: #a7f3d0;
+            background-color: #d1fae5;
+            color: #10b981;
             border: 1px solid rgba(16, 185, 129, 0.25);
             padding: 0.4em 0.8em;
             border-radius: 6px;
@@ -343,8 +352,8 @@ if (empty($_SESSION['csrf_token'])) {
         }
 
         .badge-historical {
-            background-color: var(--bg-main);
-            color: #f59e0b;
+            background-color: var(--bg-sidebar);
+            color: #d97706;
             border: 1px solid var(--border-color);
             padding: 0.25em 0.75em;
             border-radius: 6px;
@@ -352,9 +361,9 @@ if (empty($_SESSION['csrf_token'])) {
             font-weight: 500;
         }
         .badge-active {
-            background-color: rgba(16, 185, 129, 0.15);
-            color: #a7f3d0;
-            border: 1px solid rgba(16, 185, 129, 0.3);
+            background-color: #d1fae5;
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.25);
             padding: 0.25em 0.75em;
             border-radius: 6px;
             font-size: 0.75rem;
@@ -364,9 +373,9 @@ if (empty($_SESSION['csrf_token'])) {
         /* Buttons */
         .btn-accent {
             background-color: var(--accent-color);
-            color: #000000;
+            color: #ffffff; /* White text on Indigo works best */
             border: none;
-            border-radius: 4px;
+            border-radius: 8px;
             padding: 0.75rem 1.5rem;
             font-weight: bold;
             text-decoration: none;
@@ -377,15 +386,15 @@ if (empty($_SESSION['csrf_token'])) {
             transition: background-color 0.2s ease;
         }
         .btn-accent:hover {
-            background-color: #9965f4;
-            color: #000000;
+            background-color: #4f46e5;
+            color: #ffffff;
         }
 
         .btn-muted-outline {
             background-color: transparent;
             border: 1px solid var(--border-color);
             color: var(--text-secondary);
-            border-radius: 4px;
+            border-radius: 8px;
             padding: 0.75rem 1.5rem;
             font-weight: 500;
             text-decoration: none;
@@ -395,8 +404,39 @@ if (empty($_SESSION['csrf_token'])) {
             transition: all 0.2s ease;
         }
         .btn-muted-outline:hover {
-            background-color: var(--border-color);
-            color: #ffffff;
+            background-color: var(--bg-sidebar);
+            color: var(--text-primary);
+        }
+
+        /* Custom Premium Tab Styles */
+        .nav-tabs {
+            border-bottom: 2px solid var(--border-color);
+        }
+        .nav-tabs .nav-link {
+            color: var(--text-secondary);
+            border: none;
+            border-bottom: 3px solid transparent;
+            padding: 1rem 1.5rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            background: transparent;
+        }
+        .nav-tabs .nav-link:hover {
+            color: var(--accent-color);
+            border-bottom-color: var(--border-color);
+        }
+        .nav-tabs .nav-link.active {
+            color: var(--accent-color) !important;
+            background-color: transparent !important;
+            border: none !important;
+            border-bottom: 3px solid var(--accent-color) !important;
+        }
+        .tab-pane-container {
+            animation: fadeIn 0.25s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .text-muted {
@@ -427,14 +467,14 @@ if (empty($_SESSION['csrf_token'])) {
                         <a class="nav-link" href="dashboard.php"><i class="bi bi-speedometer2 me-1"></i>Dashboard</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="add_student.php"><i class="bi bi-person-plus me-1"></i>Add Student</a>
+                        <a class="nav-link" href="add_student.php"><i class="bi bi-person-plus me-1"></i>Register</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="bulk_grading.php"><i class="bi bi-journal-plus me-1"></i>Grades</a>
                     </li>
                 </ul>
                 <div class="d-flex align-items-center gap-3">
-                    <span class="text-light small">
-                        <i class="bi bi-person-circle me-1 text-primary"></i><?php echo htmlspecialchars($_SESSION['username']); ?> 
-                        <span class="badge bg-secondary ms-1"><?php echo htmlspecialchars($_SESSION['role']); ?></span>
-                    </span>
+                    <a href="profile.php" class="nav-link small"><i class="bi bi-gear-fill me-1"></i>My Profile</a>
                     <a href="logout.php" class="btn btn-outline-danger btn-sm rounded-pill px-3">
                         <i class="bi bi-box-arrow-right me-1"></i>Logout
                     </a>
@@ -459,8 +499,8 @@ if (empty($_SESSION['csrf_token'])) {
                 <?php else: ?>
 
                     <?php if (!empty($success_msg)): ?>
-                        <div class="alert alert-success d-flex align-items-center mb-4" role="alert" style="background-color: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #a7f3d0; border-radius: 4px;">
-                            <i class="bi bi-check-circle-fill me-2"></i>
+                        <div class="alert alert-success d-flex align-items-center mb-4" role="alert" style="background-color: #d1fae5; border: 1px solid rgba(16, 185, 129, 0.25); color: #065f46; border-radius: 8px;">
+                            <i class="bi bi-check-circle-fill me-2 text-success"></i>
                             <div><?php echo htmlspecialchars($success_msg); ?></div>
                         </div>
                     <?php endif; ?>
@@ -473,7 +513,7 @@ if (empty($_SESSION['csrf_token'])) {
                             <div>
                                 <h3 class="mb-1 fw-bold"><?php echo htmlspecialchars($student['name']); ?></h3>
                                 <p class="text-muted mb-0 small">
-                                    Official Index: <span class="fw-bold text-white"><?php echo htmlspecialchars($student['index_number']); ?></span>
+                                    Official Index: <span class="fw-bold text-primary"><?php echo htmlspecialchars($student['index_number']); ?></span>
                                 </p>
                             </div>
                             <div>
@@ -485,8 +525,32 @@ if (empty($_SESSION['csrf_token'])) {
                             </div>
                         </div>
 
-                        <!-- Card Body Details -->
-                        <div class="p-4 p-md-5">
+                        <!-- Tab Navigation Bar -->
+                        <div class="border-bottom px-4 pt-2 bg-white">
+                            <ul class="nav nav-tabs border-bottom-0" id="profileTabs" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link active" id="registration-tab" data-bs-toggle="tab" data-bs-target="#registration-pane" type="button" role="tab" aria-controls="registration-pane" aria-selected="true">
+                                        <i class="bi bi-person-bounding-box me-1"></i>Registration Info
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="payment-tab" data-bs-toggle="tab" data-bs-target="#payment-pane" type="button" role="tab" aria-controls="payment-pane" aria-selected="false">
+                                        <i class="bi bi-credit-card-2-front me-1"></i>Payment Status
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="exam-tab" data-bs-toggle="tab" data-bs-target="#exam-pane" type="button" role="tab" aria-controls="exam-pane" aria-selected="false">
+                                        <i class="bi bi-journal-check me-1"></i>Exam Records
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <!-- Tab Content Wrapper -->
+                        <div class="tab-content" id="profileTabsContent">
+                            
+                            <!-- TAB 1: REGISTRATION INFO -->
+                            <div class="tab-pane fade show active tab-pane-container p-4 p-md-5" id="registration-pane" role="tabpanel" aria-labelledby="registration-tab" tabindex="0">
                             
                             <!-- SECTION 1: REGISTRATION META -->
                             <div class="profile-section-title">
@@ -628,25 +692,24 @@ if (empty($_SESSION['csrf_token'])) {
                                 ?>
                             </div>
 
-                        </div>
-                    </div>
+                        </div> <!-- Close TAB 1 registration-pane -->
 
-                    <!-- PAYMENT SECTION -->
-                    <div class="profile-card mb-5">
-                        <div class="profile-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-                            <h4 class="mb-0 fw-bold"><i class="bi bi-credit-card-2-front me-2 text-primary"></i>Payment System & Tracking</h4>
-                            <?php if ($plan && $plan['plan_type'] !== 'pending'): ?>
-                                <form action="student_profile.php?id=<?php echo $student_id; ?>" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to reset this payment plan? This will delete all registered payments/receipts and return the status to Pending.');">
-                                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
-                                    <input type="hidden" name="action" value="reset_plan">
-                                    <button type="submit" class="btn btn-outline-warning btn-sm">
-                                        <i class="bi bi-arrow-counterclockwise me-1"></i>Reset Payment Plan
-                                    </button>
-                                </form>
-                            <?php endif; ?>
-                        </div>
-                        <div class="p-4 p-md-5">
+                        <!-- TAB 2: PAYMENT STATUS -->
+                        <div class="tab-pane fade tab-pane-container p-4 p-md-5" id="payment-pane" role="tabpanel" aria-labelledby="payment-tab" tabindex="0">
                             
+                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4 border-bottom border-secondary border-opacity-10 pb-3">
+                                <h4 class="mb-0 fw-bold"><i class="bi bi-credit-card-2-front me-2 text-primary"></i>Payment System & Tracking</h4>
+                                <?php if ($plan && $plan['plan_type'] !== 'pending'): ?>
+                                    <form action="student_profile.php?id=<?php echo $student_id; ?>" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to reset this payment plan? This will delete all registered payments/receipts and return the status to Pending.');">
+                                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
+                                        <input type="hidden" name="action" value="reset_plan">
+                                        <button type="submit" class="btn btn-outline-warning btn-sm">
+                                            <i class="bi bi-arrow-counterclockwise me-1"></i>Reset Payment Plan
+                                        </button>
+                                    </form>
+                                <?php endif; ?>
+                            </div>
+
                             <?php if (!$plan || $plan['plan_type'] === 'pending'): ?>
                                 
                                 <!-- NO PLAN SET UP OR PENDING -->
@@ -723,31 +786,31 @@ if (empty($_SESSION['csrf_token'])) {
 
                                 <div class="row g-4 mb-4">
                                     <div class="col-md-3">
-                                        <div class="p-3 rounded bg-dark border border-secondary border-opacity-25 text-center">
+                                        <div class="p-3 rounded border border-secondary border-opacity-10 text-center" style="background-color: var(--bg-main);">
                                             <div class="profile-label text-muted">Plan Type</div>
-                                            <div class="fs-5 fw-bold text-white mt-1">
+                                            <div class="fs-5 fw-bold text-dark mt-1">
                                                 <?php echo ($plan_type === 'full') ? 'Full Payment' : 'Installments'; ?>
                                             </div>
                                         </div>
                                     </div>
                                     <div class="col-md-3">
-                                        <div class="p-3 rounded bg-dark border border-secondary border-opacity-25 text-center">
+                                        <div class="p-3 rounded border border-secondary border-opacity-10 text-center" style="background-color: var(--bg-main);">
                                             <div class="profile-label text-muted">Course Fee</div>
-                                            <div class="fs-5 fw-bold text-white mt-1">
+                                            <div class="fs-5 fw-bold text-dark mt-1">
                                                 LKR <?php echo number_format($base_fee, 2); ?>
                                             </div>
                                         </div>
                                     </div>
                                     <div class="col-md-3">
-                                        <div class="p-3 rounded bg-dark border border-secondary border-opacity-25 text-center">
+                                        <div class="p-3 rounded border border-secondary border-opacity-10 text-center" style="background-color: var(--bg-main);">
                                             <div class="profile-label text-muted">Final Total</div>
-                                            <div class="fs-5 fw-bold text-white mt-1">
+                                            <div class="fs-5 fw-bold text-dark mt-1">
                                                 LKR <?php echo number_format($final_total, 2); ?>
                                             </div>
                                         </div>
                                     </div>
                                     <div class="col-md-3">
-                                        <div class="p-3 rounded bg-dark border border-secondary border-opacity-25 text-center">
+                                        <div class="p-3 rounded border border-secondary border-opacity-10 text-center" style="background-color: var(--bg-main);">
                                             <div class="profile-label text-muted">Paid So Far</div>
                                             <div class="fs-5 fw-bold text-success mt-1">
                                                 LKR <?php echo number_format($total_paid, 2); ?>
@@ -758,12 +821,12 @@ if (empty($_SESSION['csrf_token'])) {
 
                                 <div class="row g-4 mb-4">
                                     <div class="col-md-6">
-                                        <div class="p-4 rounded bg-dark border border-secondary border-opacity-25 h-100">
-                                            <h5 class="fw-bold mb-3 text-white"><i class="bi bi-clock-history me-1 text-primary"></i>Installment Timeline</h5>
+                                        <div class="p-4 rounded border border-secondary border-opacity-10 h-100" style="background-color: var(--bg-main);">
+                                            <h5 class="fw-bold mb-3 text-dark"><i class="bi bi-clock-history me-1 text-primary"></i>Installment Timeline</h5>
                                             
                                             <div class="list-group list-group-flush bg-transparent">
                                                 <?php if ($plan_type === 'full'): ?>
-                                                    <div class="list-group-item bg-transparent text-white px-0 border-0 d-flex justify-content-between align-items-center">
+                                                    <div class="list-group-item bg-transparent text-dark px-0 border-0 d-flex justify-content-between align-items-center">
                                                         <span><i class="bi bi-check-circle-fill text-success me-2"></i>Full Course Payment</span>
                                                         <span class="badge bg-success-subtle text-success border border-success border-opacity-25 px-3 py-2 rounded">
                                                             Paid LKR <?php echo number_format($final_total, 2); ?>
@@ -771,18 +834,18 @@ if (empty($_SESSION['csrf_token'])) {
                                                     </div>
                                                 <?php else: ?>
                                                     <?php
-                                                    $share = $base_fee / 6;
-                                                    for ($i = 1; $i <= 6; $i++):
-                                                        // Check if this installment number is recorded as paid
-                                                        $paid_record = null;
-                                                        foreach ($receipts as $r) {
-                                                            if (intval($r['installment_number']) === $i) {
-                                                                $paid_record = $r;
-                                                                break;
-                                                            }
-                                                        }
-                                                    ?>
-                                                        <div class="list-group-item bg-transparent text-white px-0 border-secondary border-opacity-25 d-flex justify-content-between align-items-center flex-wrap gap-2 py-3">
+                                                     $share = $base_fee / 6;
+                                                     for ($i = 1; $i <= 6; $i++):
+                                                         // Check if this installment number is recorded as paid
+                                                         $paid_record = null;
+                                                         foreach ($receipts as $r) {
+                                                             if (intval($r['installment_number']) === $i) {
+                                                                 $paid_record = $r;
+                                                                 break;
+                                                             }
+                                                         }
+                                                     ?>
+                                                        <div class="list-group-item bg-transparent text-dark px-0 border-secondary border-opacity-10 d-flex justify-content-between align-items-center flex-wrap gap-2 py-3">
                                                             <span>
                                                                 <i class="bi <?php echo $paid_record ? 'bi-check-circle-fill text-success' : 'bi-x-circle-fill text-danger'; ?> me-2"></i>
                                                                 Installment <?php echo $i; ?>: <strong>LKR <?php echo number_format($share, 2); ?></strong>
@@ -804,9 +867,9 @@ if (empty($_SESSION['csrf_token'])) {
                                     </div>
 
                                     <div class="col-md-6">
-                                        <div class="p-4 rounded bg-dark border border-secondary border-opacity-25 h-100 d-flex flex-column justify-content-between">
+                                        <div class="p-4 rounded border border-secondary border-opacity-10 h-100 d-flex flex-column justify-content-between" style="background-color: var(--bg-main);">
                                             <div>
-                                                <h5 class="fw-bold mb-3 text-white"><i class="bi bi-info-circle me-1 text-primary"></i>Payment Overview</h5>
+                                                <h5 class="fw-bold mb-3 text-dark"><i class="bi bi-info-circle me-1 text-primary"></i>Payment Overview</h5>
                                                 
                                                 <div class="mb-4">
                                                     <div class="profile-label text-muted">Remaining Balance</div>
@@ -825,8 +888,8 @@ if (empty($_SESSION['csrf_token'])) {
 
                                             <?php if (!$is_fully_paid && $plan_type === 'installment'): ?>
                                                 <!-- RECORD NEXT INSTALLMENT FORM -->
-                                                <div class="border-top border-secondary border-opacity-25 pt-3">
-                                                    <h6 class="fw-bold text-white mb-3">Record Next Installment Payment</h6>
+                                                <div class="border-top border-secondary border-opacity-10 pt-3">
+                                                    <h6 class="fw-bold text-dark mb-3">Record Next Installment Payment</h6>
                                                     
                                                     <form action="student_profile.php?id=<?php echo $student_id; ?>" method="POST" class="needs-validation" novalidate>
                                                         <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
@@ -855,9 +918,9 @@ if (empty($_SESSION['csrf_token'])) {
 
                                 <!-- RECEIPTS TABLE -->
                                 <div class="mt-4">
-                                    <h5 class="fw-bold mb-3 text-white"><i class="bi bi-receipt-cutoff me-1 text-primary"></i>Payment Receipt Ledger</h5>
+                                    <h5 class="fw-bold mb-3 text-dark"><i class="bi bi-receipt-cutoff me-1 text-primary"></i>Payment Receipt Ledger</h5>
                                     <div class="table-responsive">
-                                        <table class="table table-dark table-striped table-hover border border-secondary border-opacity-25" style="border-radius: 4px; overflow: hidden;">
+                                        <table class="table table-striped table-hover border border-secondary border-opacity-10" style="border-radius: 4px; overflow: hidden;">
                                             <thead>
                                                 <tr>
                                                     <th>Receipt ID</th>
@@ -890,12 +953,61 @@ if (empty($_SESSION['csrf_token'])) {
                                                 <?php endforeach; ?>
                                             </tbody>
                                         </table>
-                                    </div>
-                                </div>
+                                    </div> <!-- Close table-responsive -->
+                                </div> <!-- Close mt-4 receipts container -->
 
                             <?php endif; ?>
 
-                        </div>
+                        </div> <!-- Close TAB 2 payment-pane -->
+
+                        <!-- TAB 3: EXAM RECORDS -->
+                        <div class="tab-pane fade tab-pane-container p-4 p-md-5" id="exam-pane" role="tabpanel" aria-labelledby="exam-tab" tabindex="0">
+                            <h4 class="mb-4 fw-bold"><i class="bi bi-journal-check me-2 text-primary"></i>Exam Records & Grades</h4>
+                            
+                            <?php if (empty($exams)): ?>
+                                <div class="alert alert-info text-center py-4 border border-secondary border-opacity-10" style="background-color: var(--bg-main); border-radius: 8px;">
+                                    <i class="bi bi-exclamation-circle fs-3 text-secondary d-block mb-2"></i>
+                                    <span class="text-secondary">No exam records found for this student.</span>
+                                </div>
+                            <?php else: ?>
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-hover border border-secondary border-opacity-10" style="border-radius: 4px; overflow: hidden;">
+                                        <thead>
+                                            <tr>
+                                                <th>Exam Name</th>
+                                                <th>Course Code</th>
+                                                <th>Exam Date</th>
+                                                <th>Status</th>
+                                                <th>Mark</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php foreach ($exams as $e): ?>
+                                                <tr>
+                                                    <td class="fw-semibold text-dark"><?php echo htmlspecialchars($e['exam_name']); ?></td>
+                                                    <td><span class="badge bg-secondary-subtle text-secondary px-2.5 py-1.5 rounded"><?php echo htmlspecialchars($e['course_code']); ?></span></td>
+                                                    <td><?php echo htmlspecialchars($e['exam_date']); ?></td>
+                                                    <td>
+                                                        <?php if ($e['status'] === 'Pass'): ?>
+                                                            <span class="badge bg-success-subtle text-success border border-success border-opacity-25 px-2.5 py-1.5 rounded">Pass</span>
+                                                        <?php elseif ($e['status'] === 'Fail'): ?>
+                                                            <span class="badge bg-danger-subtle text-danger border border-danger border-opacity-25 px-2.5 py-1.5 rounded">Fail</span>
+                                                        <?php else: ?>
+                                                            <span class="badge bg-warning-subtle text-warning border border-warning border-opacity-25 px-2.5 py-1.5 rounded">Pending</span>
+                                                        <?php endif; ?>
+                                                    </td>
+                                                    <td class="fw-bold text-dark">
+                                                        <?php echo ($e['mark'] !== null) ? htmlspecialchars(number_format($e['mark'], 2)) : '-'; ?>
+                                                    </td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            <?php endif; ?>
+                        </div> <!-- Close TAB 3 exam-pane -->
+
+                    </div> <!-- Close tab-content -->
                         
                         <!-- Back Dashboard actions -->
                         <div class="profile-header border-top d-flex justify-content-between align-items-center flex-wrap gap-3">
@@ -957,22 +1069,22 @@ if (empty($_SESSION['csrf_token'])) {
             if (planType === 'full') {
                 const finalTotal = baseFee * 0.90; // 10% discount
                 calculationPreview.innerHTML = `
-                    <div class="p-3 rounded border border-success border-opacity-25 bg-success bg-opacity-10 text-success-emphasis" style="background-color: rgba(25, 135, 84, 0.1) !important; color: #a3cfbb !important;">
+                    <div class="p-3 rounded border border-success border-opacity-25" style="background-color: #d1fae5; color: #065f46;">
                         <strong>Full Course Payment Calculation:</strong><br>
                         Base Course Fee: LKR ${baseFee.toLocaleString('en-US', {minimumFractionDigits: 2})}<br>
                         10% Discount: - LKR ${(baseFee * 0.10).toLocaleString('en-US', {minimumFractionDigits: 2})}<br>
-                        <span class="fs-5 fw-bold text-white">Final Discounted Total: LKR ${finalTotal.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+                        <span class="fs-5 fw-bold text-dark">Final Discounted Total: LKR ${finalTotal.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
                     </div>
                 `;
             } else if (planType === 'installment') {
                 const monthly = baseFee / 6;
                 let listHtml = `
-                    <div class="p-3 rounded border border-info border-opacity-25 bg-info bg-opacity-10 text-info-emphasis" style="background-color: rgba(13, 202, 240, 0.1) !important; color: #9eeaf9 !important;">
+                    <div class="p-3 rounded border border-info border-opacity-25" style="background-color: #e0f2fe; color: #0369a1;">
                         <strong>6-Month Installment Division Plan:</strong>
                         <ol class="mt-2 mb-0">
                 `;
                 for (let i = 1; i <= 6; i++) {
-                    listHtml += `<li class="text-white">Installment ${i}: <span class="fw-bold">LKR ${monthly.toLocaleString('en-US', {minimumFractionDigits: 2})}</span></li>`;
+                    listHtml += `<li class="text-dark">Installment ${i}: <span class="fw-bold">LKR ${monthly.toLocaleString('en-US', {minimumFractionDigits: 2})}</span></li>`;
                 }
                 listHtml += `
                         </ol>
