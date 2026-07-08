@@ -93,6 +93,7 @@ CREATE TABLE IF NOT EXISTS `payment_plans` (
     `plan_type` ENUM('full', 'installment', 'pending') NOT NULL DEFAULT 'pending',
     `base_fee` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
     `final_total` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    `admission_paid` TINYINT(1) NOT NULL DEFAULT 0,
     PRIMARY KEY (`plan_id`),
     CONSTRAINT `fk_payment_plans_student` FOREIGN KEY (`student_id`) 
         REFERENCES `students` (`id`) ON DELETE CASCADE
@@ -100,11 +101,10 @@ CREATE TABLE IF NOT EXISTS `payment_plans` (
 
 -- 4. Create the `payment_records` table
 CREATE TABLE IF NOT EXISTS `payment_records` (
-    `receipt_id` INT AUTO_INCREMENT,
+    `receipt_id` VARCHAR(50) NOT NULL,
     `student_id` INT NOT NULL,
     `amount_paid` DECIMAL(10,2) NOT NULL,
     `payment_date` DATE NOT NULL,
-    `installment_number` INT NOT NULL,
     PRIMARY KEY (`receipt_id`),
     CONSTRAINT `fk_payment_records_student` FOREIGN KEY (`student_id`) 
         REFERENCES `students` (`id`) ON DELETE CASCADE

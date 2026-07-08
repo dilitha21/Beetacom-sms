@@ -60,77 +60,125 @@ if ($student && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])
         } elseif ($action === 'setup_plan') {
             $base_fee = floatval($_POST['base_fee'] ?? 0);
             $plan_type = $_POST['plan_type'] ?? '';
+            $admission_paid = isset($_POST['admission_paid']) ? 1 : 0;
             $payment_date = trim($_POST['payment_date'] ?? date('Y-m-d'));
+            $receipt_id = trim($_POST['receipt_id'] ?? '');
 
             if ($base_fee <= 0 || !in_array($plan_type, ['full', 'installment'])) {
                 $error_msg = "Invalid course fee or payment type selection.";
+            } elseif ($receipt_id === '') {
+                $error_msg = "Receipt Number is required for the initial payment.";
             } else {
-                $final_total = $base_fee;
-                $amount_paid = 0.00;
-
+                // PHP Backend recalculations:
                 if ($plan_type === 'full') {
-                    $final_total = $base_fee * 0.90; // 10% discount for full payments
+                    $final_total = $base_fee * 0.95;
                     $amount_paid = $final_total;
                 } else {
-                    $amount_paid = $base_fee / 6; // First installment share
+                    $final_total = $base_fee;
+                    $amount_paid = $base_fee / 6;
                 }
 
                 try {
                     $pdo->beginTransaction();
 
-                    // Remove any existing pending plans
-                    $pdo->prepare("DELETE FROM payment_plans WHERE student_id = :id")->execute([':id' => $student_id]);
-
                     // Insert payment plan
-                    $stmt = $pdo->prepare("INSERT INTO payment_plans (student_id, plan_type, base_fee, final_total) VALUES (:student_id, :plan_type, :base_fee, :final_total)");
+                    $stmt = $pdo->prepare("INSERT INTO payment_plans (student_id, plan_type, base_fee, final_total, admission_paid) VALUES (:student_id, :plan_type, :base_fee, :final_total, :admission_paid)");
                     $stmt->execute([
-                        ':student_id' => $student_id,
-                        ':plan_type'   => $plan_type,
-                        ':base_fee'    => $base_fee,
-                        ':final_total' => $final_total
+                        ':student_id'     => $student_id,
+                        ':plan_type'      => $plan_type,
+                        ':base_fee'       => $base_fee,
+                        ':final_total'    => $final_total,
+                        ':admission_paid' => $admission_paid
                     ]);
 
-                    // Insert initial receipt payment record
-                    $stmt = $pdo->prepare("INSERT INTO payment_records (student_id, amount_paid, payment_date, installment_number) VALUES (:student_id, :amount_paid, :payment_date, 1)");
+                    // Insert initial payment record
+                    $stmt = $pdo->prepare("INSERT INTO payment_records (receipt_id, student_id, amount_paid, payment_date) VALUES (:receipt_id, :student_id, :amount_paid, :payment_date)");
                     $stmt->execute([
-                        ':student_id' => $student_id,
+                        ':receipt_id'  => $receipt_id,
+                        ':student_id'  => $student_id,
                         ':amount_paid' => $amount_paid,
-                        ':payment_date' => $payment_date
+                        ':payment_date'=> $payment_date
                     ]);
 
                     $pdo->commit();
                     $success_msg = "Payment plan set up successfully!";
                 } catch (\Exception $e) {
                     $pdo->rollBack();
-                    $error_msg = "Payment plan setup failed: " . htmlspecialchars($e->getMessage());
+                    if ($e->getCode() == 23000 || strpos($e->getMessage(), '1062') !== false) {
+                        $error_msg = "Error: Receipt Number already exists in the system.";
+                    } else {
+                        $error_msg = "Payment plan setup failed: " . htmlspecialchars($e->getMessage());
+                    }
                 }
             }
         } elseif ($action === 'record_payment') {
-            $amount_paid = floatval($_POST['amount_paid'] ?? 0);
             $payment_date = trim($_POST['payment_date'] ?? date('Y-m-d'));
+            $receipt_id = trim($_POST['receipt_id'] ?? '');
+            $admission_paid = isset($_POST['admission_paid']) ? 1 : 0;
 
-            // Find current payment records
-            $stmt = $pdo->prepare("SELECT COUNT(*) FROM payment_records WHERE student_id = :id");
-            $stmt->execute([':id' => $student_id]);
-            $current_count = intval($stmt->fetchColumn());
-            $next_installment = $current_count + 1;
-
-            if ($amount_paid <= 0) {
-                $error_msg = "Invalid payment amount.";
-            } elseif ($next_installment > 6) {
-                $error_msg = "All 6 installments are already recorded.";
+            if ($receipt_id === '') {
+                $error_msg = "Receipt Number is required.";
             } else {
                 try {
-                    $stmt = $pdo->prepare("INSERT INTO payment_records (student_id, amount_paid, payment_date, installment_number) VALUES (:student_id, :amount_paid, :payment_date, :installment_number)");
-                    $stmt->execute([
-                        ':student_id'         => $student_id,
-                        ':amount_paid'        => $amount_paid,
-                        ':payment_date'       => $payment_date,
-                        ':installment_number' => $next_installment
-                    ]);
-                    $success_msg = "Installment payment recorded successfully!";
-                } catch (\PDOException $e) {
-                    $error_msg = "Failed to record payment: " . htmlspecialchars($e->getMessage());
+                    $pdo->beginTransaction();
+
+                    // Fetch active plan
+                    $stmt = $pdo->prepare("SELECT * FROM payment_plans WHERE student_id = :id");
+                    $stmt->execute([':id' => $student_id]);
+                    $current_plan = $stmt->fetch();
+
+                    if ($current_plan) {
+                        // Calculate total paid so far to check balance
+                        $stmt = $pdo->prepare("SELECT SUM(amount_paid) FROM payment_records WHERE student_id = :id");
+                        $stmt->execute([':id' => $student_id]);
+                        $total_paid = floatval($stmt->fetchColumn());
+
+                        $base_fee = floatval($current_plan['base_fee']);
+                        $final_total = floatval($current_plan['final_total']);
+                        
+                        // Remaining balance
+                        $remaining = $final_total - $total_paid;
+                        
+                        if ($remaining <= 0.01) {
+                            $error_msg = "The course fee is already fully paid.";
+                            $pdo->rollBack();
+                        } else {
+                            // Calculate amount paid (installments are 1/6th of base fee, capped at remaining)
+                            $amount_paid = $base_fee / 6;
+                            if ($amount_paid > $remaining) {
+                                $amount_paid = $remaining;
+                            }
+
+                            // Update admission_paid in payment_plans
+                            $stmt = $pdo->prepare("UPDATE payment_plans SET admission_paid = :admission_paid WHERE student_id = :student_id");
+                            $stmt->execute([
+                                ':admission_paid' => $admission_paid,
+                                ':student_id'     => $student_id
+                            ]);
+
+                            // Insert transaction into payment_records
+                            $stmt = $pdo->prepare("INSERT INTO payment_records (receipt_id, student_id, amount_paid, payment_date) VALUES (:receipt_id, :student_id, :amount_paid, :payment_date)");
+                            $stmt->execute([
+                                ':receipt_id'  => $receipt_id,
+                                ':student_id'  => $student_id,
+                                ':amount_paid' => $amount_paid,
+                                ':payment_date'=> $payment_date
+                            ]);
+
+                            $pdo->commit();
+                            $success_msg = "Payment recorded successfully!";
+                        }
+                    } else {
+                        $pdo->rollBack();
+                        $error_msg = "No active payment plan found to record payment against.";
+                    }
+                } catch (\Exception $e) {
+                    $pdo->rollBack();
+                    if ($e->getCode() == 23000 || strpos($e->getMessage(), '1062') !== false) {
+                        $error_msg = "Error: Receipt Number already exists in the system.";
+                    } else {
+                        $error_msg = "Failed to record payment: " . htmlspecialchars($e->getMessage());
+                    }
                 }
             }
         } elseif ($action === 'delete_profile') {
@@ -143,16 +191,27 @@ if ($student && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])
                 $error_msg = "Failed to delete student profile: " . htmlspecialchars($e->getMessage());
             }
         } elseif ($action === 'delete_receipt') {
-            $receipt_id = filter_var($_POST['receipt_id'] ?? 0, FILTER_VALIDATE_INT);
-            if ($receipt_id) {
+            $receipt_id = trim($_POST['receipt_id'] ?? '');
+            if ($receipt_id !== '') {
                 try {
+                    $pdo->beginTransaction();
+
+                    // Fetch receipt amount
+                    $stmt = $pdo->prepare("SELECT amount_paid FROM payment_records WHERE receipt_id = :receipt_id AND student_id = :student_id");
+                    $stmt->execute([':receipt_id' => $receipt_id, ':student_id' => $student_id]);
+                    $amt = floatval($stmt->fetchColumn());
+
+                    // Delete receipt
                     $stmt = $pdo->prepare("DELETE FROM payment_records WHERE receipt_id = :receipt_id AND student_id = :student_id");
                     $stmt->execute([
                         ':receipt_id' => $receipt_id,
                         ':student_id' => $student_id
                     ]);
+
+                    $pdo->commit();
                     $success_msg = "Payment receipt record deleted successfully.";
-                } catch (\PDOException $e) {
+                } catch (\Exception $e) {
+                    $pdo->rollBack();
                     $error_msg = "Failed to delete payment receipt: " . htmlspecialchars($e->getMessage());
                 }
             }
@@ -184,7 +243,7 @@ if ($student && empty($error_msg)) {
         $plan = $stmt->fetch();
 
         // Fetch receipts
-        $stmt = $pdo->prepare("SELECT * FROM payment_records WHERE student_id = :id ORDER BY installment_number ASC");
+        $stmt = $pdo->prepare("SELECT * FROM payment_records WHERE student_id = :id ORDER BY payment_date ASC, receipt_id ASC");
         $stmt->execute([':id' => $student_id]);
         $receipts = $stmt->fetchAll();
 
@@ -730,13 +789,13 @@ if (empty($_SESSION['csrf_token'])) {
 
                                 <!-- PAY NOW SETUP FORM (Hidden by default, shown via JS) -->
                                 <div id="pay-now-form" style="display: none;">
-                                    <h5 class="fw-bold mb-4 text-white"><i class="bi bi-gear-fill me-1 text-primary"></i>Configure New Payment Plan</h5>
+                                    <h5 class="fw-bold mb-4 text-dark"><i class="bi bi-gear-fill me-1 text-primary"></i>Configure New Payment Plan</h5>
                                     
                                     <form action="student_profile.php?id=<?php echo $student_id; ?>" method="POST" class="needs-validation" novalidate>
                                         <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
                                         <input type="hidden" name="action" value="setup_plan">
 
-                                        <div class="row g-3 mb-4">
+                                        <div class="row g-3 mb-3 align-items-center">
                                             <div class="col-md-4">
                                                 <label for="base_fee" class="form-label required">Course Fee (LKR)</label>
                                                 <input type="number" class="form-control w-100" id="base_fee" name="base_fee" required min="1" step="0.01" placeholder="e.g. 100000">
@@ -745,13 +804,30 @@ if (empty($_SESSION['csrf_token'])) {
                                                 <label for="plan_type" class="form-label required">Payment Type</label>
                                                 <select class="form-select w-100" id="plan_type" name="plan_type" required>
                                                     <option value="" disabled selected>Select option</option>
-                                                    <option value="full">Full Payment (10% Discount)</option>
-                                                    <option value="installment">6-Month Installments</option>
+                                                    <option value="full">Full Payment (5% Discount)</option>
+                                                    <option value="installment">6-Month Installment</option>
                                                 </select>
                                             </div>
+                                            <div class="col-md-4 d-flex align-items-center pt-4">
+                                                <div class="form-check form-switch">
+                                                    <input class="form-check-input" type="checkbox" id="admission_paid" name="admission_paid" value="1">
+                                                    <label class="form-check-label fw-semibold text-dark" for="admission_paid">Admission Fee Paid</label>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="row g-3 mb-4">
                                             <div class="col-md-4">
-                                                <label for="payment_date" class="form-label required">Payment Date</label>
-                                                <input type="date" class="form-control w-100" id="payment_date" name="payment_date" required value="<?php echo date('Y-m-d'); ?>">
+                                                <label for="setup_receipt_id" class="form-label required">Receipt Number</label>
+                                                <input type="text" class="form-control w-100" id="setup_receipt_id" name="receipt_id" required placeholder="e.g. R-1002">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label for="setup_payment_date" class="form-label required">Payment Date</label>
+                                                <input type="date" class="form-control w-100" id="setup_payment_date" name="payment_date" required value="<?php echo date('Y-m-d'); ?>">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label for="amount_due_today" class="form-label">Amount Due Today (LKR)</label>
+                                                <input type="text" class="form-control w-100 fw-bold text-dark" id="amount_due_today" name="amount_due_today" readonly value="0.00" style="background-color: #e9ecef;">
                                             </div>
                                         </div>
 
@@ -760,7 +836,7 @@ if (empty($_SESSION['csrf_token'])) {
 
                                         <div class="d-flex justify-content-end gap-3">
                                             <button type="button" class="btn btn-muted-outline" onclick="hidePaymentForm()">Cancel</button>
-                                            <button type="submit" class="btn btn-accent">Confirm & Process Payment</button>
+                                            <button type="submit" class="btn btn-accent">Confirm & Process Plan</button>
                                         </div>
                                     </form>
                                 </div>
@@ -772,6 +848,7 @@ if (empty($_SESSION['csrf_token'])) {
                                     $plan_type = $plan['plan_type'];
                                     $base_fee = floatval($plan['base_fee']);
                                     $final_total = floatval($plan['final_total']);
+                                    $admission_paid = intval($plan['admission_paid']);
                                     
                                     // Calculate total paid so far
                                     $total_paid = 0.00;
@@ -784,36 +861,49 @@ if (empty($_SESSION['csrf_token'])) {
                                     $is_fully_paid = ($balance <= 0.01);
                                 ?>
 
-                                <div class="row g-4 mb-4">
-                                    <div class="col-md-3">
-                                        <div class="p-3 rounded border border-secondary border-opacity-10 text-center" style="background-color: var(--bg-main);">
-                                            <div class="profile-label text-muted">Plan Type</div>
-                                            <div class="fs-5 fw-bold text-dark mt-1">
-                                                <?php echo ($plan_type === 'full') ? 'Full Payment' : 'Installments'; ?>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <div class="p-3 rounded border border-secondary border-opacity-10 text-center" style="background-color: var(--bg-main);">
-                                            <div class="profile-label text-muted">Course Fee</div>
-                                            <div class="fs-5 fw-bold text-dark mt-1">
+                                <!-- Summary Cards -->
+                                <div class="row g-3 mb-4">
+                                    <div class="col">
+                                        <div class="p-3 rounded border border-secondary border-opacity-10 text-center h-100" style="background-color: var(--bg-main);">
+                                            <div class="profile-label text-muted small">Base Fee</div>
+                                            <div class="fs-6 fw-bold text-dark mt-1">
                                                 LKR <?php echo number_format($base_fee, 2); ?>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="col-md-3">
-                                        <div class="p-3 rounded border border-secondary border-opacity-10 text-center" style="background-color: var(--bg-main);">
-                                            <div class="profile-label text-muted">Final Total</div>
-                                            <div class="fs-5 fw-bold text-dark mt-1">
+                                    <div class="col">
+                                        <div class="p-3 rounded border border-secondary border-opacity-10 text-center h-100" style="background-color: var(--bg-main);">
+                                            <div class="profile-label text-muted small">Plan Type</div>
+                                            <div class="fs-6 fw-bold text-dark mt-1">
+                                                <?php echo ($plan_type === 'full') ? 'Full (5% Disc)' : 'Installment'; ?>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col">
+                                        <div class="p-3 rounded border border-secondary border-opacity-10 text-center h-100" style="background-color: var(--bg-main);">
+                                            <div class="profile-label text-muted small">Final Total</div>
+                                            <div class="fs-6 fw-bold text-dark mt-1">
                                                 LKR <?php echo number_format($final_total, 2); ?>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="col-md-3">
-                                        <div class="p-3 rounded border border-secondary border-opacity-10 text-center" style="background-color: var(--bg-main);">
-                                            <div class="profile-label text-muted">Paid So Far</div>
-                                            <div class="fs-5 fw-bold text-success mt-1">
+                                    <div class="col">
+                                        <div class="p-3 rounded border border-secondary border-opacity-10 text-center h-100" style="background-color: var(--bg-main);">
+                                            <div class="profile-label text-muted small">Total Paid</div>
+                                            <div class="fs-6 fw-bold text-success mt-1">
                                                 LKR <?php echo number_format($total_paid, 2); ?>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col">
+                                        <div class="p-3 rounded border border-secondary border-opacity-10 text-center h-100" style="background-color: var(--bg-main);">
+                                            <div class="profile-label text-muted small">Admission Fee</div>
+                                            <div class="mt-1">
+                                                <?php if ($admission_paid): ?>
+                                                    <span class="badge bg-success-subtle text-success border border-success border-opacity-25 px-2.5 py-1.5 rounded">Settled</span>
+                                                <?php else: ?>
+                                                    <span class="badge bg-danger-subtle text-danger border border-danger border-opacity-25 px-2.5 py-1.5 rounded">Pending</span>
+                                                <?php endif; ?>
                                             </div>
                                         </div>
                                     </div>
@@ -834,33 +924,22 @@ if (empty($_SESSION['csrf_token'])) {
                                                     </div>
                                                 <?php else: ?>
                                                     <?php
-                                                     $share = $base_fee / 6;
-                                                     for ($i = 1; $i <= 6; $i++):
-                                                         // Check if this installment number is recorded as paid
-                                                         $paid_record = null;
-                                                         foreach ($receipts as $r) {
-                                                             if (intval($r['installment_number']) === $i) {
-                                                                 $paid_record = $r;
-                                                                 break;
-                                                             }
-                                                         }
+                                                     $p_index = 1;
+                                                     foreach ($receipts as $r):
                                                      ?>
                                                         <div class="list-group-item bg-transparent text-dark px-0 border-secondary border-opacity-10 d-flex justify-content-between align-items-center flex-wrap gap-2 py-3">
                                                             <span>
-                                                                <i class="bi <?php echo $paid_record ? 'bi-check-circle-fill text-success' : 'bi-x-circle-fill text-danger'; ?> me-2"></i>
-                                                                Installment <?php echo $i; ?>: <strong>LKR <?php echo number_format($share, 2); ?></strong>
+                                                                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                                                Payment #<?php echo $p_index++; ?>: <strong>LKR <?php echo number_format(floatval($r['amount_paid']), 2); ?></strong>
                                                             </span>
-                                                            <?php if ($paid_record): ?>
-                                                                <span class="badge bg-success-subtle text-success border border-success border-opacity-25 px-2 py-1.5 rounded small">
-                                                                    Paid LKR <?php echo number_format(floatval($paid_record['amount_paid']), 2); ?> on <?php echo htmlspecialchars($paid_record['payment_date']); ?>
-                                                                </span>
-                                                            <?php else: ?>
-                                                                <span class="badge bg-danger-subtle text-danger border border-danger border-opacity-25 px-2 py-1.5 rounded small">
-                                                                    Pending / Unpaid
-                                                                </span>
-                                                            <?php endif; ?>
+                                                            <span class="badge bg-success-subtle text-success border border-success border-opacity-25 px-2 py-1.5 rounded small">
+                                                                Paid on <?php echo htmlspecialchars($r['payment_date']); ?>
+                                                            </span>
                                                         </div>
-                                                    <?php endfor; ?>
+                                                     <?php endforeach; ?>
+                                                     <?php if (empty($receipts)): ?>
+                                                         <div class="text-muted small py-2">No payments recorded yet.</div>
+                                                     <?php endif; ?>
                                                 <?php endif; ?>
                                             </div>
                                         </div>
@@ -886,30 +965,57 @@ if (empty($_SESSION['csrf_token'])) {
                                                 </div>
                                             </div>
 
-                                            <?php if (!$is_fully_paid && $plan_type === 'installment'): ?>
-                                                <!-- RECORD NEXT INSTALLMENT FORM -->
-                                                <div class="border-top border-secondary border-opacity-10 pt-3">
-                                                    <h6 class="fw-bold text-dark mb-3">Record Next Installment Payment</h6>
-                                                    
-                                                    <form action="student_profile.php?id=<?php echo $student_id; ?>" method="POST" class="needs-validation" novalidate>
-                                                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
-                                                        <input type="hidden" name="action" value="record_payment">
+                                            <?php if (!$is_fully_paid): ?>
+                                                <!-- MAKE PAYMENT TRIGGER & FORM -->
+                                                <div>
+                                                    <button class="btn btn-accent btn-sm w-100 py-2 mb-3" type="button" id="make-payment-btn" onclick="showRecordPaymentForm()">
+                                                        <i class="bi bi-cash-coin me-1"></i>Make Payment
+                                                    </button>
 
-                                                        <div class="row g-2 mb-3">
-                                                            <div class="col-sm-6">
-                                                                <label for="amount_paid" class="form-label required small">Amount Paid</label>
-                                                                <input type="number" class="form-control form-control-sm w-100" id="amount_paid" name="amount_paid" required min="1" step="0.01" value="<?php echo round($base_fee / 6, 2); ?>">
-                                                            </div>
-                                                            <div class="col-sm-6">
-                                                                <label for="record_payment_date" class="form-label required small">Payment Date</label>
-                                                                <input type="date" class="form-control form-control-sm w-100" id="record_payment_date" name="payment_date" required value="<?php echo date('Y-m-d'); ?>">
-                                                            </div>
-                                                        </div>
+                                                    <div class="border-top border-secondary border-opacity-10 pt-3" id="record-payment-form" style="display: none;">
+                                                        <h6 class="fw-bold text-dark mb-3">Record Payment Transaction</h6>
+                                                        
+                                                        <form action="student_profile.php?id=<?php echo $student_id; ?>" method="POST" class="needs-validation" novalidate>
+                                                            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
+                                                            <input type="hidden" name="action" value="record_payment">
 
-                                                        <button type="submit" class="btn btn-accent btn-sm w-100 py-2">
-                                                            <i class="bi bi-save me-1"></i>Record Installment <?php echo count($receipts) + 1; ?>
-                                                        </button>
-                                                    </form>
+                                                            <div class="mb-3">
+                                                                <label for="receipt_id_inst" class="form-label required small">Receipt Number</label>
+                                                                <input type="text" class="form-control form-control-sm w-100" id="receipt_id_inst" name="receipt_id" required placeholder="e.g. R-1003">
+                                                            </div>
+
+                                                            <div class="mb-3 d-flex align-items-center">
+                                                                <div class="form-check form-switch">
+                                                                    <input class="form-check-input" type="checkbox" id="admission_paid_inst" name="admission_paid" value="1" <?php echo $admission_paid ? 'checked' : ''; ?>>
+                                                                    <label class="form-check-label fw-semibold text-dark" for="admission_paid_inst">Admission Fee Paid</label>
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="row g-2 mb-3">
+                                                                <div class="col-sm-6">
+                                                                    <label for="amount_due_today_inst" class="form-label small">Amount Due Today (LKR)</label>
+                                                                    <?php
+                                                                    $inst_due = $base_fee / 6;
+                                                                    if ($inst_due > $balance) {
+                                                                        $inst_due = $balance;
+                                                                    }
+                                                                    ?>
+                                                                    <input type="text" class="form-control form-control-sm w-100 fw-bold text-dark" id="amount_due_today_inst" readonly value="<?php echo number_format($inst_due, 2); ?>">
+                                                                </div>
+                                                                <div class="col-sm-6">
+                                                                    <label for="record_payment_date" class="form-label required small">Payment Date</label>
+                                                                    <input type="date" class="form-control form-control-sm w-100" id="record_payment_date" name="payment_date" required value="<?php echo date('Y-m-d'); ?>">
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="d-flex gap-2">
+                                                                <button type="button" class="btn btn-outline-secondary btn-sm w-50" onclick="hideRecordPaymentForm()">Cancel</button>
+                                                                <button type="submit" class="btn btn-accent btn-sm w-50">
+                                                                    <i class="bi bi-save me-1"></i>Record Payment
+                                                                </button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
                                                 </div>
                                             <?php endif; ?>
                                         </div>
@@ -924,23 +1030,26 @@ if (empty($_SESSION['csrf_token'])) {
                                             <thead>
                                                 <tr>
                                                     <th>Receipt ID</th>
-                                                    <th>Installment No</th>
+                                                    <th>Payment Description</th>
                                                     <th>Amount Paid</th>
                                                     <th>Payment Date</th>
                                                     <th>Actions</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                <?php foreach ($receipts as $r): ?>
+                                                <?php 
+                                                $p_index = 1;
+                                                foreach ($receipts as $r): 
+                                                ?>
                                                     <tr>
                                                         <td>REC-<?php echo str_pad($r['receipt_id'], 5, '0', STR_PAD_LEFT); ?></td>
                                                         <td>
-                                                            <?php echo ($plan_type === 'full') ? 'Full Fee' : 'Installment ' . $r['installment_number']; ?>
+                                                            <?php echo ($plan_type === 'full') ? 'Full Payment' : 'Payment #' . $p_index++; ?>
                                                         </td>
                                                         <td class="fw-bold text-success">LKR <?php echo number_format(floatval($r['amount_paid']), 2); ?></td>
                                                         <td><?php echo htmlspecialchars($r['payment_date']); ?></td>
                                                         <td>
-                                                            <form action="student_profile.php?id=<?php echo $student_id; ?>" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this payment receipt? This will revert the installment payment status.');">
+                                                            <form action="student_profile.php?id=<?php echo $student_id; ?>" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this payment receipt? This will revert the payment status.');">
                                                                 <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
                                                                 <input type="hidden" name="action" value="delete_receipt">
                                                                 <input type="hidden" name="receipt_id" value="<?php echo $r['receipt_id']; ?>">
@@ -1053,48 +1162,64 @@ if (empty($_SESSION['csrf_token'])) {
             document.getElementById('calculation_preview').innerHTML = '';
             document.getElementById('base_fee').value = '';
             document.getElementById('plan_type').value = '';
+            document.getElementById('setup_receipt_id').value = '';
+            document.getElementById('amount_due_today').value = '0.00';
+            document.getElementById('admission_paid').checked = false;
+        };
+
+        const showRecordPaymentForm = () => {
+            document.getElementById('make-payment-btn').style.display = 'none';
+            document.getElementById('record-payment-form').style.display = 'block';
+        };
+
+        const hideRecordPaymentForm = () => {
+            document.getElementById('record-payment-form').style.display = 'none';
+            document.getElementById('make-payment-btn').style.display = 'block';
+            document.getElementById('receipt_id_inst').value = '';
         };
 
         const baseFeeInput = document.getElementById('base_fee');
         const planTypeSelect = document.getElementById('plan_type');
+        const amountDueTodayInput = document.getElementById('amount_due_today');
         const calculationPreview = document.getElementById('calculation_preview');
 
         const calculatePreview = () => {
             const baseFee = parseFloat(baseFeeInput.value) || 0;
             const planType = planTypeSelect.value;
-            calculationPreview.innerHTML = '';
 
-            if (baseFee <= 0 || !planType) return;
+            if (baseFee <= 0 || !planType) {
+                amountDueTodayInput.value = '0.00';
+                calculationPreview.innerHTML = '';
+                return;
+            }
 
             if (planType === 'full') {
-                const finalTotal = baseFee * 0.90; // 10% discount
+                const finalTotal = baseFee * 0.95;
+                amountDueTodayInput.value = finalTotal.toFixed(2);
+
                 calculationPreview.innerHTML = `
                     <div class="p-3 rounded border border-success border-opacity-25" style="background-color: #d1fae5; color: #065f46;">
-                        <strong>Full Course Payment Calculation:</strong><br>
+                        <strong>Full Course Payment (5% Discount):</strong><br>
                         Base Course Fee: LKR ${baseFee.toLocaleString('en-US', {minimumFractionDigits: 2})}<br>
-                        10% Discount: - LKR ${(baseFee * 0.10).toLocaleString('en-US', {minimumFractionDigits: 2})}<br>
-                        <span class="fs-5 fw-bold text-dark">Final Discounted Total: LKR ${finalTotal.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+                        5% Discount: - LKR ${(baseFee * 0.05).toLocaleString('en-US', {minimumFractionDigits: 2})}<br>
+                        <span class="fs-5 fw-bold text-dark">Final Total: LKR ${finalTotal.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
                     </div>
                 `;
             } else if (planType === 'installment') {
-                const monthly = baseFee / 6;
-                let listHtml = `
+                const installment = baseFee / 6;
+                amountDueTodayInput.value = installment.toFixed(2);
+
+                calculationPreview.innerHTML = `
                     <div class="p-3 rounded border border-info border-opacity-25" style="background-color: #e0f2fe; color: #0369a1;">
-                        <strong>6-Month Installment Division Plan:</strong>
-                        <ol class="mt-2 mb-0">
-                `;
-                for (let i = 1; i <= 6; i++) {
-                    listHtml += `<li class="text-dark">Installment ${i}: <span class="fw-bold">LKR ${monthly.toLocaleString('en-US', {minimumFractionDigits: 2})}</span></li>`;
-                }
-                listHtml += `
-                        </ol>
+                        <strong>6-Month Installment Plan:</strong><br>
+                        Total Course Fee: LKR ${baseFee.toLocaleString('en-US', {minimumFractionDigits: 2})}<br>
+                        Amount Due (1st Installment): <span class="fs-5 fw-bold text-dark">LKR ${installment.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
                     </div>
                 `;
-                calculationPreview.innerHTML = listHtml;
             }
         };
 
-        if (baseFeeInput && planTypeSelect) {
+        if (baseFeeInput) {
             baseFeeInput.addEventListener('input', calculatePreview);
             planTypeSelect.addEventListener('change', calculatePreview);
         }
