@@ -16,6 +16,51 @@ if (isset($_SESSION['user_id'])) {
 
 require_once 'db_connect.php';
 
+// Check if remember_me cookie is set
+if (isset($_COOKIE['remember_me'])) {
+    $parts = explode(':', $_COOKIE['remember_me'], 2);
+    if (count($parts) === 2) {
+        $cookie_user_id = (int)$parts[0];
+        $cookie_token = $parts[1];
+
+        try {
+            $stmt = $pdo->prepare('SELECT * FROM users WHERE user_id = ?');
+            $stmt->execute([$cookie_user_id]);
+            $user = $stmt->fetch();
+
+            if ($user && !empty($user['remember_token']) && hash_equals($user['remember_token'], hash('sha256', $cookie_token))) {
+                // Set session variables
+                $_SESSION['user_id']  = $user['user_id'];
+                $_SESSION['username'] = $user['username'];
+                $_SESSION['role']     = $user['role'];
+
+                // Rotate remember token for security
+                $new_token = bin2hex(random_bytes(32));
+                $new_hash = hash('sha256', $new_token);
+
+                $update_stmt = $pdo->prepare('UPDATE users SET remember_token = ? WHERE user_id = ?');
+                $update_stmt->execute([$new_hash, $user['user_id']]);
+
+                setcookie(
+                    'remember_me',
+                    $user['user_id'] . ':' . $new_token,
+                    [
+                        'expires' => time() + (30 * 24 * 60 * 60), // 30 days
+                        'path' => '/',
+                        'httponly' => true,
+                        'samesite' => 'Lax'
+                    ]
+                );
+
+                header("Location: dashboard.php");
+                exit();
+            }
+        } catch (\PDOException $e) {
+            // Ignore DB error
+        }
+    }
+}
+
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -42,6 +87,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $_SESSION['user_id']  = $user['user_id'];
                     $_SESSION['username'] = $user['username'];
                     $_SESSION['role']     = $user['role'];
+
+                    // Process Remember Me
+                    if (isset($_POST['remember_me'])) {
+                        $token = bin2hex(random_bytes(32));
+                        $token_hash = hash('sha256', $token);
+
+                        $update_stmt = $pdo->prepare('UPDATE users SET remember_token = ? WHERE user_id = ?');
+                        $update_stmt->execute([$token_hash, $user['user_id']]);
+
+                        setcookie(
+                            'remember_me',
+                            $user['user_id'] . ':' . $token,
+                            [
+                                'expires' => time() + (30 * 24 * 60 * 60), // 30 days
+                                'path' => '/',
+                                'httponly' => true,
+                                'samesite' => 'Lax'
+                            ]
+                        );
+                    }
 
                     header("Location: dashboard.php");
                     exit();
@@ -194,6 +259,12 @@ if (empty($_SESSION['csrf_token'])) {
         .text-muted {
             color: var(--text-secondary) !important;
         }
+
+        /* Custom checkbox styles */
+        .form-check-input:checked {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+        }
     </style>
 </head>
 <body>
@@ -230,6 +301,15 @@ if (empty($_SESSION['csrf_token'])) {
                 <div class="input-group">
                     <span class="input-group-text"><i class="bi bi-key"></i></span>
                     <input type="password" class="form-control" id="password" name="password" placeholder="Enter password" required>
+                </div>
+            </div>
+
+            <div class="mb-4 d-flex align-items-center">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="remember_me" name="remember_me">
+                    <label class="form-check-label text-muted small ms-1" for="remember_me">
+                        Remember me
+                    </label>
                 </div>
             </div>
 

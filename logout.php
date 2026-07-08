@@ -8,6 +8,22 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+// Clear remember token in database
+if (isset($_SESSION['user_id'])) {
+    require_once 'db_connect.php';
+    try {
+        $stmt = $pdo->prepare('UPDATE users SET remember_token = NULL WHERE user_id = ?');
+        $stmt->execute([$_SESSION['user_id']]);
+    } catch (\PDOException $e) {
+        // Ignore DB error
+    }
+}
+
+// Clear remember_me cookie
+if (isset($_COOKIE['remember_me'])) {
+    setcookie('remember_me', '', time() - 3600, '/');
+}
+
 // Clear all session variables
 $_SESSION = [];
 

@@ -15,6 +15,7 @@ CREATE TABLE `users` (
     `username` VARCHAR(50) NOT NULL,
     `password_hash` VARCHAR(255) NOT NULL,
     `role` ENUM('super_admin', 'staff') NOT NULL DEFAULT 'staff',
+    `remember_token` VARCHAR(255) NULL,
     PRIMARY KEY (`user_id`),
     UNIQUE KEY `idx_unique_username` (`username`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
