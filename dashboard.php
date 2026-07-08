@@ -41,6 +41,9 @@ try {
 } catch (\PDOException $e) {
     $error_msg = 'Database error: ' . htmlspecialchars($e->getMessage());
 }
+
+$is_htmx = isset($_SERVER['HTTP_HX_REQUEST']);
+if (!$is_htmx):
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -54,6 +57,8 @@ try {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <style>
         /* 1. Define your global color palette */
         :root {
@@ -68,6 +73,12 @@ try {
             --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
             --shadow-hover: 0 10px 15px -3px rgba(0,0,0,0.08);
         }
+
+        /* HTMX Transitions & Spinner Styles */
+        .htmx-swapping { opacity: 0; transition: opacity 200ms ease-out; }
+        #global-spinner { position: fixed; top: 20px; right: 20px; z-index: 9999; display: none; }
+        .htmx-request#global-spinner { display: inline-block; }
+        .htmx-request #global-spinner { display: inline-block; }
 
         /* 2. Apply the baseline to the whole page */
         body {
@@ -148,8 +159,8 @@ try {
             background-color: var(--bg-surface);
             border-color: var(--accent-color);
             color: var(--text-primary);
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
             outline: none;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
         }
         .search-control::placeholder {
             color: var(--text-secondary);
@@ -157,81 +168,71 @@ try {
 
         .btn-search {
             background-color: var(--accent-color);
-            color: #ffffff;
+            color: white;
             border: none;
-            font-weight: bold;
-            padding: 0.8rem 2rem;
             border-radius: 0 8px 8px 0;
-            cursor: pointer;
+            padding: 0 1.8rem;
+            font-weight: 600;
             transition: background-color 0.2s ease;
         }
         .btn-search:hover {
             background-color: #4f46e5;
+            color: white;
         }
 
         .btn-clear-search {
-            background-color: var(--bg-surface);
-            border: 1px solid var(--border-color);
+            background-color: transparent;
             color: var(--text-secondary);
+            border: 1px solid var(--border-color);
             border-radius: 8px;
             padding: 0.8rem 1.2rem;
+            font-weight: 500;
             transition: all 0.2s ease;
         }
         .btn-clear-search:hover {
-            background-color: var(--bg-sidebar);
+            background-color: var(--border-color);
             color: var(--text-primary);
         }
 
-        /* Data Card */
-        .data-card {
+        /* Export Card */
+        .export-card {
             background-color: var(--bg-surface);
             border: 1px solid var(--border-color);
             border-radius: var(--border-radius);
-            overflow: hidden;
+            padding: 2rem;
+            box-shadow: var(--shadow-md);
+            margin-bottom: 2rem;
+        }
+
+        /* Table Card & General Table */
+        .table-card {
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 2rem;
             box-shadow: var(--shadow-md);
         }
-
-        .data-card-header {
-            background-color: rgba(0, 0, 0, 0.01);
-            border-bottom: 1px solid var(--border-color);
-            padding: 1.25rem 2rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
-
-        /* Table Styling */
         .table-custom {
             margin-bottom: 0;
-            color: var(--text-primary);
+            vertical-align: middle;
         }
         .table-custom th {
-            background-color: var(--bg-sidebar);
-            border-bottom: 1px solid var(--border-color);
+            background-color: var(--bg-main) !important;
             color: var(--text-secondary);
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
             font-weight: 600;
-            padding: 1.25rem 1.5rem;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color) !important;
         }
         .table-custom td {
-            padding: 1.25rem 1.5rem;
+            padding: 1.2rem 1rem;
             border-bottom: 1px solid var(--border-color);
-            vertical-align: middle;
             font-size: 0.95rem;
         }
-        .table-striped tbody tr:nth-of-type(odd) {
-            background-color: #f8fafc;
-        }
-        .table-custom tbody tr {
-            transition: background-color 0.2s ease;
-        }
-        .table-custom tbody tr:hover {
-            background-color: rgba(99, 102, 241, 0.05) !important;
-            cursor: pointer;
+        .table-custom tr:hover td {
+            background-color: rgba(99, 102, 241, 0.02) !important;
         }
 
         /* Badges */
@@ -245,8 +246,8 @@ try {
             font-weight: 500;
         }
         .badge-active {
-            background-color: #d1fae5; /* Emerald Light BG */
-            color: #10b981; /* Emerald Green */
+            background-color: rgba(16, 185, 129, 0.1);
+            color: #10b981;
             border: 1px solid rgba(16, 185, 129, 0.25);
             padding: 0.25em 0.75em;
             border-radius: 6px;
@@ -280,12 +281,17 @@ try {
         }
     </style>
 </head>
-<body>
+<body hx-indicator="#global-spinner">
+
+    <!-- Global Loading Spinner -->
+    <div id="global-spinner" class="htmx-indicator spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
 
     <!-- Nav Bar -->
     <nav class="navbar navbar-expand-lg navbar-custom sticky-top mb-4">
         <div class="container">
-            <a class="navbar-brand d-flex align-items-center gap-2" href="dashboard.php">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="dashboard.php" hx-get="dashboard.php" hx-target="#main-content" hx-push-url="true" hx-swap="innerHTML transition:true">
                 <img src="logo.jpg" alt="BMCS Logo" style="height: 38px; width: auto; object-fit: contain;">
                 <span>Beetacom</span>
             </a>
@@ -295,17 +301,17 @@ try {
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link active" href="dashboard.php"><i class="bi bi-speedometer2 me-1"></i>Dashboard</a>
+                        <a class="nav-link active" href="dashboard.php" hx-get="dashboard.php" hx-target="#main-content" hx-push-url="true" hx-swap="innerHTML transition:true"><i class="bi bi-speedometer2 me-1"></i>Dashboard</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="add_student.php"><i class="bi bi-person-plus me-1"></i>Register</a>
+                        <a class="nav-link" href="add_student.php" hx-get="add_student.php" hx-target="#main-content" hx-push-url="true" hx-swap="innerHTML transition:true"><i class="bi bi-person-plus me-1"></i>Register</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="bulk_grading.php"><i class="bi bi-journal-plus me-1"></i>Grades</a>
+                        <a class="nav-link" href="bulk_grading.php" hx-get="bulk_grading.php" hx-target="#main-content" hx-push-url="true" hx-swap="innerHTML transition:true"><i class="bi bi-journal-plus me-1"></i>Grades</a>
                     </li>
                 </ul>
                 <div class="d-flex align-items-center gap-3">
-                    <a href="profile.php" class="nav-link small"><i class="bi bi-gear-fill me-1"></i>My Profile</a>
+                    <a href="profile.php" class="nav-link small" hx-get="profile.php" hx-target="#main-content" hx-push-url="true" hx-swap="innerHTML transition:true"><i class="bi bi-gear-fill me-1"></i>My Profile</a>
                     <a href="logout.php" class="btn btn-outline-danger btn-sm rounded-pill px-3">
                         <i class="bi bi-box-arrow-right me-1"></i>Logout
                     </a>
@@ -313,6 +319,9 @@ try {
             </div>
         </div>
     </nav>
+<?php endif; ?>
+
+    <main id="main-content">
 
     <!-- Dashboard Panel -->
     <div class="container dashboard-container">
@@ -466,8 +475,24 @@ try {
         </div>
 
     </div>
+    </main>
 
+<?php if (!$is_htmx): ?>
     <!-- Bootstrap 5 Bundle JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.body.addEventListener('htmx:afterOnLoad', function() {
+            const path = window.location.pathname.split('/').pop() || 'dashboard.php';
+            document.querySelectorAll('.nav-link').forEach(link => {
+                const href = link.getAttribute('href');
+                if (href === path || (path === '' && href === 'dashboard.php')) {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
+        });
+    </script>
 </body>
 </html>
+<?php endif; ?>

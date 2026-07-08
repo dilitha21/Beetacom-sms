@@ -75,6 +75,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
+
+$is_htmx = isset($_SERVER['HTTP_HX_REQUEST']);
+if (!$is_htmx):
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -86,6 +89,8 @@ if (empty($_SESSION['csrf_token'])) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <style>
         /* Define theme variables */
         :root {
@@ -99,6 +104,12 @@ if (empty($_SESSION['csrf_token'])) {
             --border-radius: 12px;
             --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
         }
+
+        /* HTMX Transitions & Spinner Styles */
+        .htmx-swapping { opacity: 0; transition: opacity 200ms ease-out; }
+        #global-spinner { position: fixed; top: 20px; right: 20px; z-index: 9999; display: none; }
+        .htmx-request#global-spinner { display: inline-block; }
+        .htmx-request #global-spinner { display: inline-block; }
 
         body {
             background-color: var(--bg-main);
@@ -258,12 +269,17 @@ if (empty($_SESSION['csrf_token'])) {
         }
     </style>
 </head>
-<body>
+<body hx-indicator="#global-spinner">
+
+    <!-- Global Loading Spinner -->
+    <div id="global-spinner" class="htmx-indicator spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
 
     <!-- Nav Bar -->
     <nav class="navbar navbar-expand-lg navbar-custom sticky-top mb-4">
         <div class="container">
-            <a class="navbar-brand d-flex align-items-center gap-2" href="dashboard.php">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="dashboard.php" hx-get="dashboard.php" hx-target="#main-content" hx-push-url="true" hx-swap="innerHTML transition:true">
                 <img src="logo.jpg" alt="BMCS Logo" style="height: 38px; width: auto; object-fit: contain;">
                 <span>Beetacom</span>
             </a>
@@ -273,17 +289,17 @@ if (empty($_SESSION['csrf_token'])) {
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="dashboard.php"><i class="bi bi-speedometer2 me-1"></i>Dashboard</a>
+                        <a class="nav-link" href="dashboard.php" hx-get="dashboard.php" hx-target="#main-content" hx-push-url="true" hx-swap="innerHTML transition:true"><i class="bi bi-speedometer2 me-1"></i>Dashboard</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="add_student.php"><i class="bi bi-person-plus me-1"></i>Register</a>
+                        <a class="nav-link" href="add_student.php" hx-get="add_student.php" hx-target="#main-content" hx-push-url="true" hx-swap="innerHTML transition:true"><i class="bi bi-person-plus me-1"></i>Register</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link active" href="bulk_grading.php"><i class="bi bi-journal-plus me-1"></i>Grades</a>
+                        <a class="nav-link active" href="bulk_grading.php" hx-get="bulk_grading.php" hx-target="#main-content" hx-push-url="true" hx-swap="innerHTML transition:true"><i class="bi bi-journal-plus me-1"></i>Grades</a>
                     </li>
                 </ul>
                 <div class="d-flex align-items-center gap-3">
-                    <a href="profile.php" class="nav-link small"><i class="bi bi-gear-fill me-1"></i>My Profile</a>
+                    <a href="profile.php" class="nav-link small" hx-get="profile.php" hx-target="#main-content" hx-push-url="true" hx-swap="innerHTML transition:true"><i class="bi bi-gear-fill me-1"></i>My Profile</a>
                     <a href="logout.php" class="btn btn-outline-danger btn-sm rounded-pill px-3">
                         <i class="bi bi-box-arrow-right me-1"></i>Logout
                     </a>
@@ -291,6 +307,9 @@ if (empty($_SESSION['csrf_token'])) {
             </div>
         </div>
     </nav>
+<?php endif; ?>
+
+    <main id="main-content">
 
     <!-- Main Container -->
     <div class="container pb-5">
@@ -459,5 +478,9 @@ if (empty($_SESSION['csrf_token'])) {
                 })
         })()
     </script>
+    </main>
+
+<?php if (!$is_htmx): ?>
 </body>
 </html>
+<?php endif; ?>
