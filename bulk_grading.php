@@ -7,18 +7,20 @@ $error_msg = '';
 
 $course_code = trim($_GET['course_code'] ?? '');
 $batch_year = trim($_GET['batch_year'] ?? '');
+$batch_number = trim($_GET['batch_number'] ?? '');
 $exam_name = trim($_GET['exam_name'] ?? '');
 $exam_date = trim($_GET['exam_date'] ?? date('Y-m-d'));
 
 $students = [];
 
-// Load students matching the batch and course
-if ($course_code !== '' && $batch_year !== '') {
+// Load students matching the batch, course and batch number
+if ($course_code !== '' && $batch_year !== '' && $batch_number !== '') {
     try {
-        $stmt = $pdo->prepare("SELECT id, name, index_number FROM students WHERE course_code = :course_code AND batch_year = :batch_year ORDER BY index_number ASC");
+        $stmt = $pdo->prepare("SELECT id, name, index_number FROM students WHERE course_code = :course_code AND batch_year = :batch_year AND batch_number = :batch_number ORDER BY index_number ASC");
         $stmt->execute([
             ':course_code' => $course_code,
-            ':batch_year'  => $batch_year
+            ':batch_year'  => $batch_year,
+            ':batch_number' => $batch_number
         ]);
         $students = $stmt->fetchAll();
     } catch (\PDOException $e) {
@@ -63,6 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             $students = [];
             $course_code = '';
             $batch_year = '';
+            $batch_number = '';
             $exam_name = '';
         } catch (\Exception $e) {
             $pdo->rollBack();
@@ -337,36 +340,28 @@ if (!$is_htmx):
                         <p class="text-muted mb-0 small">Load a student batch by Course and Batch Year, and define the exam metadata.</p>
                     </div>
                     <div class="p-4">
-                        <form action="bulk_grading.php" method="GET" class="needs-validation" novalidate>
+                        <form action="bulk_grading.php" method="GET" class="needs-validation" novalidate hx-get="bulk_grading.php" hx-target="#main-content" hx-push-url="true" hx-swap="innerHTML transition:true">
                             <div class="row g-3">
-                                <div class="col-md-3">
+                                <div class="col-md-2">
                                     <label for="course_code" class="form-label required">Course Code</label>
                                     <select class="form-select w-100" id="course_code" name="course_code" required>
                                         <option value="" disabled selected>Select Course</option>
-                                        <option value="IN" <?php echo ($course_code === 'IN') ? 'selected' : ''; ?>>IN (Individual)</option>
-                                        <option value="AP" <?php echo ($course_code === 'AP') ? 'selected' : ''; ?>>AP (App Assistant)</option>
-                                        <option value="CGD" <?php echo ($course_code === 'CGD') ? 'selected' : ''; ?>>CGD (Graphic Design)</option>
-                                        <option value="PRE" <?php echo ($course_code === 'PRE') ? 'selected' : ''; ?>>PRE (Pre-School)</option>
-                                        <option value="ICT" <?php echo ($course_code === 'ICT') ? 'selected' : ''; ?>>ICT (ICT Technician)</option>
+                                        <option value="IN" <?php echo ($course_code === 'IN') ? 'selected' : ''; ?>>IN - Individual</option>
+                                        <option value="AP" <?php echo ($course_code === 'AP') ? 'selected' : ''; ?>>AP - Application Programming</option>
+                                        <option value="CGD" <?php echo ($course_code === 'CGD') ? 'selected' : ''; ?>>CGD - Computer Graphic Designer</option>
+                                        <option value="PRE" <?php echo ($course_code === 'PRE') ? 'selected' : ''; ?>>PRE - Pre School Teacher Training</option>
+                                        <option value="ICT" <?php echo ($course_code === 'ICT') ? 'selected' : ''; ?>>ICT - ICT Technician</option>
                                     </select>
                                 </div>
                                 <div class="col-md-2">
                                     <label for="batch_year" class="form-label required">Batch Year</label>
-                                    <select class="form-select w-100" id="batch_year" name="batch_year" required>
-                                        <option value="" disabled selected>Select Year</option>
-                                        <?php
-                                        $current_short = (int)date('y');
-                                        $start_year = 24;
-                                        $end_year = max($current_short + 10, 30);
-                                        for ($y = $start_year; $y <= $end_year; $y++) {
-                                            $padded_y = str_pad($y, 2, '0', STR_PAD_LEFT);
-                                            $selected = ($batch_year === $padded_y) ? 'selected' : '';
-                                            echo "<option value=\"$padded_y\" $selected>$padded_y</option>";
-                                        }
-                                        ?>
-                                    </select>
+                                    <input type="text" class="form-control w-100" id="batch_year" name="batch_year" maxlength="2" pattern="\d{2}" placeholder="e.g. 26" required value="<?php echo htmlspecialchars($batch_year); ?>">
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-2">
+                                    <label for="batch_number" class="form-label required">Batch No</label>
+                                    <input type="text" class="form-control w-100" id="batch_number" name="batch_number" maxlength="3" pattern="\d{3}" placeholder="e.g. 004" required value="<?php echo htmlspecialchars($batch_number); ?>">
+                                </div>
+                                <div class="col-md-3">
                                     <label for="exam_name" class="form-label required">Exam Name</label>
                                     <input type="text" class="form-control w-100" id="exam_name" name="exam_name" required placeholder="e.g. Final Practical" value="<?php echo htmlspecialchars($exam_name); ?>">
                                 </div>
@@ -385,12 +380,12 @@ if (!$is_htmx):
                 </div>
 
                 <!-- Bulk Grading List Form -->
-                <?php if ($_SERVER['REQUEST_METHOD'] === 'GET' && $course_code !== '' && $batch_year !== ''): ?>
+                <?php if ($_SERVER['REQUEST_METHOD'] === 'GET' && $course_code !== '' && $batch_year !== '' && $batch_number !== ''): ?>
                     <div class="grading-card mt-4">
                         <div class="card-header-custom d-flex justify-content-between align-items-center flex-wrap gap-2">
                             <div>
                                 <h4 class="mb-1 fw-bold"><i class="bi bi-card-checklist me-2 text-primary"></i>2. Input Grades for Batch</h4>
-                                <p class="text-muted mb-0 small">Course: <strong><?php echo htmlspecialchars($course_code); ?></strong> | Batch Year: <strong>20<?php echo htmlspecialchars($batch_year); ?></strong></p>
+                                <p class="text-muted mb-0 small">Course: <strong><?php echo htmlspecialchars($course_code); ?></strong> | Batch Year: <strong>20<?php echo htmlspecialchars($batch_year); ?></strong> | Batch No: <strong><?php echo htmlspecialchars($batch_number); ?></strong></p>
                             </div>
                             <span class="badge bg-primary px-3 py-2 rounded"><?php echo count($students); ?> Students Found</span>
                         </div>
@@ -408,6 +403,8 @@ if (!$is_htmx):
                                     
                                     <!-- Pass filters as parameters to POST -->
                                     <input type="hidden" name="course_code" value="<?php echo htmlspecialchars($course_code); ?>">
+                                    <input type="hidden" name="batch_year" value="<?php echo htmlspecialchars($batch_year); ?>">
+                                    <input type="hidden" name="batch_number" value="<?php echo htmlspecialchars($batch_number); ?>">
                                     <input type="hidden" name="exam_name" value="<?php echo htmlspecialchars($exam_name); ?>">
                                     <input type="hidden" name="exam_date" value="<?php echo htmlspecialchars($exam_date); ?>">
 

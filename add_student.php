@@ -10,16 +10,25 @@ require_once 'db_connect.php';
 
 $success_msg = '';
 $error_msg = '';
+$is_htmx = isset($_SERVER['HTTP_HX_REQUEST']);
 
 // Handle POST request
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // CSRF Protection
     if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== ($_SESSION['csrf_token'] ?? '')) {
         $error_msg = 'Invalid session token. Please refresh and try again.';
+        if ($is_htmx) {
+            echo '<div class="alert alert-custom-error d-flex align-items-center mb-4" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <div>' . htmlspecialchars($error_msg) . '</div>
+                  </div>';
+            exit;
+        }
     } else {
         // Collect & Sanitize textual/date inputs
         $course_code        = trim($_POST['course_code'] ?? '');
         $batch_year         = trim($_POST['batch_year'] ?? '');
+        $batch_number       = trim($_POST['batch_number'] ?? '');
         $is_nvq             = trim($_POST['is_nvq'] ?? '');
         $sequence_number    = trim($_POST['sequence_number'] ?? '');
         $is_historical      = isset($_POST['is_historical']) ? 1 : 0;
@@ -37,9 +46,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Build index_number based on course_code
         if ($course_code === 'IN') {
             $is_nvq = null;
-            $index_number = $course_code . '/' . $batch_year . '/' . $sequence_number;
+            $index_number = $course_code . '/' . $batch_year . '/' . $batch_number . '/' . $sequence_number;
         } else {
-            $index_number = $course_code . '/' . $batch_year . '/' . $is_nvq . '/' . $sequence_number;
+            $index_number = $course_code . '/' . $batch_year . '/' . $batch_number . '/' . $is_nvq . '/' . $sequence_number;
         }
 
         // Educational Qualifications (boolean checkboxes)
@@ -73,7 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         // Validation checks
-        if (empty($course_code) || empty($batch_year) || empty($sequence_number) || ($course_code !== 'IN' && empty($is_nvq)) || 
+        if (empty($course_code) || empty($batch_year) || empty($batch_number) || empty($sequence_number) || ($course_code !== 'IN' && empty($is_nvq)) || 
             empty($registration_date) || empty($name) || empty($address) || 
             empty($contact_no) || empty($nic) || empty($dob) || empty($gender)) {
             $error_msg = 'Please fill out all required fields.';
@@ -81,18 +90,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error_msg = 'NIC must be exactly 12 digits.';
         } elseif (!preg_match('/^[0-9]{10}$/', $contact_no)) {
             $error_msg = 'Contact number must be exactly 10 digits.';
+        }
+
+        if ($error_msg !== '') {
+            if ($is_htmx) {
+                echo '<div class="alert alert-custom-error d-flex align-items-center mb-4" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <div>' . htmlspecialchars($error_msg) . '</div>
+                      </div>';
+                exit;
+            }
         } else {
             // Process insertion
             try {
                 $sql = "INSERT INTO students (
-                            index_number, course_code, batch_year, is_nvq, sequence_number,
+                            index_number, course_code, batch_year, batch_number, is_nvq, sequence_number,
                             is_historical, registration_date, name, address, contact_no, nic, dob, gender, 
                             guardian_name, guardian_details, added_by,
                             gce_al_science, gce_al_maths, gce_al_commerce, gce_al_art, gce_al_tech, gce_ol, other_edu, kids_grade,
                             ict_tech, computer_app_ast, graphic_designer, pre_school,
                             non_nvq_app_ast, non_nvq_graphic, hr, english, web_design, beetaa_kids, other_course
                         ) VALUES (
-                            :index_number, :course_code, :batch_year, :is_nvq, :sequence_number,
+                            :index_number, :course_code, :batch_year, :batch_number, :is_nvq, :sequence_number,
                             :is_historical, :registration_date, :name, :address, :contact_no, :nic, :dob, :gender, 
                             :guardian_name, :guardian_details, :added_by,
                             :gce_al_science, :gce_al_maths, :gce_al_commerce, :gce_al_art, :gce_al_tech, :gce_ol, :other_edu, :kids_grade,
@@ -105,6 +124,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ':index_number'       => $index_number,
                     ':course_code'        => $course_code,
                     ':batch_year'         => $batch_year,
+                    ':batch_number'       => $batch_number,
                     ':is_nvq'             => !empty($is_nvq) ? $is_nvq : null,
                     ':sequence_number'    => !empty($sequence_number) ? (int)$sequence_number : null,
                     ':is_historical'      => $is_historical,
@@ -139,15 +159,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ':other_course'       => $other_course
                 ]);
 
-                $new_id = $pdo->lastInsertId();
-                header("Location: student_profile.php?id=" . $new_id);
-                exit;
+                if ($is_htmx) {
+                    echo '<div class="alert alert-custom-success d-flex align-items-center mb-4" role="alert">
+                            <i class="bi bi-check-circle-fill me-2"></i>
+                            <div>Student registered successfully! Index Number: <strong>' . htmlspecialchars($index_number) . '</strong></div>
+                          </div>';
+                    echo '<script>
+                            document.getElementById("studentForm").reset();
+                            document.getElementById("index_number").value = "";
+                            document.getElementById("is_historical").checked = false;
+                            const event = new Event("change");
+                            document.getElementById("is_historical").dispatchEvent(event);
+                            document.getElementById("course_code").dispatchEvent(event);
+                          </script>';
+                    exit;
+                } else {
+                    $new_id = $pdo->lastInsertId();
+                    header("Location: student_profile.php?id=" . $new_id);
+                    exit;
+                }
             } catch (\PDOException $e) {
                 // Check if UNIQUE constraint was violated (MySQL error code 1062)
                 if (isset($e->errorInfo[1]) && $e->errorInfo[1] == 1062) {
                     $error_msg = 'Error: This Index Number already exists in the system.';
                 } else {
                     $error_msg = 'Database Error: ' . htmlspecialchars($e->getMessage());
+                }
+                if ($is_htmx) {
+                    echo '<div class="alert alert-custom-error d-flex align-items-center mb-4" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            <div>' . htmlspecialchars($error_msg) . '</div>
+                          </div>';
+                    exit;
                 }
             }
         }
@@ -456,19 +499,21 @@ if (!$is_htmx):
             <div class="col-xl-10">
 
                 <!-- Alert Messages -->
-                <?php if (!empty($success_msg)): ?>
-                    <div class="alert alert-custom-success d-flex align-items-center mb-4" role="alert">
-                        <i class="bi bi-check-circle-fill me-2"></i>
-                        <div><?php echo htmlspecialchars($success_msg); ?></div>
-                    </div>
-                <?php endif; ?>
+                <div id="alert-container">
+                    <?php if (!empty($success_msg)): ?>
+                        <div class="alert alert-custom-success d-flex align-items-center mb-4" role="alert">
+                            <i class="bi bi-check-circle-fill me-2"></i>
+                            <div><?php echo htmlspecialchars($success_msg); ?></div>
+                        </div>
+                    <?php endif; ?>
 
-                <?php if (!empty($error_msg)): ?>
-                    <div class="alert alert-custom-error d-flex align-items-center mb-4" role="alert">
-                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                        <div><?php echo htmlspecialchars($error_msg); ?></div>
-                    </div>
-                <?php endif; ?>
+                    <?php if (!empty($error_msg)): ?>
+                        <div class="alert alert-custom-error d-flex align-items-center mb-4" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            <div><?php echo htmlspecialchars($error_msg); ?></div>
+                        </div>
+                    <?php endif; ?>
+                </div>
 
                 <!-- Registration Card -->
                 <div class="form-card">
@@ -486,7 +531,7 @@ if (!$is_htmx):
                     </div>
 
                     <div class="card-body p-4 p-md-5">
-                        <form action="add_student.php" method="POST" id="studentForm" class="needs-validation" novalidate>
+                        <form action="add_student.php" method="POST" id="studentForm" class="needs-validation" novalidate hx-post="add_student.php" hx-target="#alert-container" hx-swap="innerHTML">
                             
                             <!-- Hidden Fields -->
                             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
@@ -504,28 +549,20 @@ if (!$is_htmx):
                                     <label for="course_code" class="form-label required">Course Code</label>
                                     <select class="form-select" id="course_code" name="course_code" required>
                                         <option value="" disabled selected>Select Course</option>
-                                        <option value="IN" <?php echo (isset($_POST['course_code']) && $_POST['course_code'] === 'IN') ? 'selected' : ''; ?>>IN</option>
-                                        <option value="AP" <?php echo (isset($_POST['course_code']) && $_POST['course_code'] === 'AP') ? 'selected' : ''; ?>>AP</option>
-                                        <option value="CGD" <?php echo (isset($_POST['course_code']) && $_POST['course_code'] === 'CGD') ? 'selected' : ''; ?>>CGD</option>
-                                        <option value="PRE" <?php echo (isset($_POST['course_code']) && $_POST['course_code'] === 'PRE') ? 'selected' : ''; ?>>PRE</option>
-                                        <option value="ICT" <?php echo (isset($_POST['course_code']) && $_POST['course_code'] === 'ICT') ? 'selected' : ''; ?>>ICT</option>
+                                        <option value="IN" <?php echo (isset($_POST['course_code']) && $_POST['course_code'] === 'IN') ? 'selected' : ''; ?>>IN - Individual</option>
+                                        <option value="AP" <?php echo (isset($_POST['course_code']) && $_POST['course_code'] === 'AP') ? 'selected' : ''; ?>>AP - Application Programming</option>
+                                        <option value="CGD" <?php echo (isset($_POST['course_code']) && $_POST['course_code'] === 'CGD') ? 'selected' : ''; ?>>CGD - Computer Graphic Designer</option>
+                                        <option value="PRE" <?php echo (isset($_POST['course_code']) && $_POST['course_code'] === 'PRE') ? 'selected' : ''; ?>>PRE - Pre School Teacher Training</option>
+                                        <option value="ICT" <?php echo (isset($_POST['course_code']) && $_POST['course_code'] === 'ICT') ? 'selected' : ''; ?>>ICT - ICT Technician</option>
                                     </select>
                                 </div>
+                                <div class="col-md-1">
+                                    <label for="batch_year" class="form-label required">Year</label>
+                                    <input type="text" name="batch_year" id="batch_year" maxlength="2" pattern="\d{2}" placeholder="e.g. 26" required class="form-control" value="<?php echo isset($_POST['batch_year']) ? htmlspecialchars($_POST['batch_year']) : ''; ?>">
+                                </div>
                                 <div class="col-md-2">
-                                    <label for="batch_year" class="form-label required">Batch Year</label>
-                                    <select class="form-select" id="batch_year" name="batch_year" required>
-                                        <option value="" disabled selected>Select Year</option>
-                                        <?php
-                                        $current_short = (int)date('y');
-                                        $start_year = 24; // Keep 2024 for historical records
-                                        $end_year = max($current_short + 10, 30); // Future-proof to current + 10 years
-                                        for ($y = $start_year; $y <= $end_year; $y++) {
-                                            $padded_y = str_pad($y, 2, '0', STR_PAD_LEFT);
-                                            $selected = (isset($_POST['batch_year']) && $_POST['batch_year'] === $padded_y) ? 'selected' : '';
-                                            echo "<option value=\"$padded_y\" $selected>$padded_y</option>";
-                                        }
-                                        ?>
-                                    </select>
+                                    <label for="batch_number" class="form-label required">Batch No</label>
+                                    <input type="text" name="batch_number" id="batch_number" maxlength="3" pattern="\d{3}" placeholder="e.g. 004" required class="form-control" value="<?php echo isset($_POST['batch_number']) ? htmlspecialchars($_POST['batch_number']) : ''; ?>">
                                 </div>
                                 <div class="col-md-2" id="nvq_type_container">
                                     <label for="is_nvq" class="form-label required">Type</label>
@@ -538,9 +575,17 @@ if (!$is_htmx):
                                     <label for="sequence_number" class="form-label required">Sequence No</label>
                                     <input type="number" class="form-control" id="sequence_number" name="sequence_number" required placeholder="e.g. 3782" min="1" value="<?php echo isset($_POST['sequence_number']) ? htmlspecialchars($_POST['sequence_number']) : ''; ?>">
                                 </div>
-                                <div class="col-md-3">
-                                    <label for="registration_date" class="form-label required">Registration Date</label>
+                                <div class="col-md-2">
+                                    <label for="registration_date" class="form-label required">Reg. Date</label>
                                     <input type="date" class="form-control" id="registration_date" name="registration_date" required value="<?php echo isset($_POST['registration_date']) ? htmlspecialchars($_POST['registration_date']) : ''; ?>">
+                                </div>
+                            </div>
+
+                            <!-- Generated Index Number Preview -->
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-6">
+                                    <label for="index_number" class="form-label fw-bold">Generated Index Number Preview</label>
+                                    <input type="text" class="form-control fw-bold text-primary" id="index_number" name="index_number" readonly placeholder="Fill inputs to generate..." value="<?php echo isset($index_number) ? htmlspecialchars($index_number) : ''; ?>">
                                 </div>
                             </div>
 
@@ -768,9 +813,35 @@ if (!$is_htmx):
             // Handle toggle changes
             isHistoricalCheckbox.addEventListener('change', updateDatePickerState);
 
-            // Conditional NVQ field handling based on Course Code
+            // Elements for Index Number Builder
             const courseCodeSelect = document.getElementById('course_code');
+            const batchYearInput = document.getElementById('batch_year');
+            const batchNumberInput = document.getElementById('batch_number');
             const isNvqSelect = document.getElementById('is_nvq');
+            const sequenceNumberInput = document.getElementById('sequence_number');
+            const indexNumberInput = document.getElementById('index_number');
+            const nvqTypeContainer = document.getElementById('nvq_type_container');
+
+            // Live Index Number Generator
+            const generateIndexNumber = () => {
+                const courseCode = courseCodeSelect.value || '';
+                const batchYear = batchYearInput.value || '';
+                const batchNumber = batchNumberInput.value || '';
+                const isNvq = isNvqSelect.value || '';
+                const sequenceNumber = sequenceNumberInput.value || '';
+
+                // If critical parameters are empty, leave preview blank
+                if (!courseCode || !batchYear || !batchNumber || !sequenceNumber || (courseCode !== 'IN' && !isNvq)) {
+                    indexNumberInput.value = '';
+                    return;
+                }
+
+                if (courseCode === 'IN') {
+                    indexNumberInput.value = `${courseCode}/${batchYear}/${batchNumber}/${sequenceNumber}`;
+                } else {
+                    indexNumberInput.value = `${courseCode}/${batchYear}/${batchNumber}/${isNvq}/${sequenceNumber}`;
+                }
+            };
 
             const handleCourseCodeChange = () => {
                 const courseCode = courseCodeSelect.value || '';
@@ -780,17 +851,27 @@ if (!$is_htmx):
                     isNvqSelect.disabled = true;
                     isNvqSelect.removeAttribute('required');
                     isNvqSelect.value = '';
+                    nvqTypeContainer.style.display = 'none';
                 } else {
                     // Enable is_nvq
                     isNvqSelect.disabled = false;
                     isNvqSelect.setAttribute('required', true);
+                    nvqTypeContainer.style.display = '';
                 }
+                generateIndexNumber();
             };
 
-            // Listen for changes
+            // Listen to inputs
+            [courseCodeSelect, batchYearInput, batchNumberInput, isNvqSelect, sequenceNumberInput].forEach(elem => {
+                if (elem) {
+                    elem.addEventListener('input', generateIndexNumber);
+                    elem.addEventListener('change', generateIndexNumber);
+                }
+            });
+
             courseCodeSelect.addEventListener('change', handleCourseCodeChange);
 
-            // Initialize on page load
+            // Initialize
             handleCourseCodeChange();
 
             // Handle manual reset button

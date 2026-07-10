@@ -34,6 +34,7 @@ CREATE TABLE `students` (
     `id` INT AUTO_INCREMENT,
     `course_code` VARCHAR(10) NOT NULL,
     `batch_year` VARCHAR(4) NOT NULL,
+    `batch_number` VARCHAR(3) NOT NULL,
     `is_nvq` VARCHAR(5) DEFAULT NULL,
     `sequence_number` INT NOT NULL,
     `index_number` VARCHAR(50) NOT NULL,
