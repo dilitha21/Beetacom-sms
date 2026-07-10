@@ -517,21 +517,30 @@ if (!$is_htmx):
 
                 <!-- Registration Card -->
                 <div class="form-card">
-                    <div class="card-header-custom d-flex justify-content-between align-items-center flex-wrap gap-3">
-                        <div>
-                            <h4 class="mb-1 fw-bold"><i class="bi bi-person-bounding-box me-2 text-primary"></i>Student Registration</h4>
-                            <p class="text-muted mb-0 small">Enter student academic and personal profiles below</p>
+                    <form action="add_student.php" method="POST" id="studentForm" class="needs-validation" novalidate hx-post="add_student.php" hx-target="#alert-container" hx-swap="innerHTML">
+                        <div class="card-header-custom d-flex justify-content-between align-items-center flex-wrap gap-3">
+                            <div>
+                                <h4 class="mb-1 fw-bold"><i class="bi bi-person-bounding-box me-2 text-primary"></i>Student Registration</h4>
+                                <p class="text-muted mb-0 small">Enter student academic and personal profiles below</p>
+                            </div>
+                            
+                            <!-- Toggle & Date Container -->
+                            <div class="d-flex align-items-center gap-3">
+                                <!-- Registration Date -->
+                                <div class="d-flex align-items-center gap-2 px-3 py-2 rounded-3" style="background-color: var(--bg-main); border: 1px solid var(--border-color);">
+                                    <label for="registration_date" class="form-label required mb-0 small fw-bold text-dark" style="white-space: nowrap;">Reg. Date:</label>
+                                    <input type="date" class="form-control form-control-sm border-0 bg-transparent p-0 text-dark" id="registration_date" name="registration_date" required value="<?php echo isset($_POST['registration_date']) ? htmlspecialchars($_POST['registration_date']) : ''; ?>" style="box-shadow: none; outline: none; width: 130px;">
+                                </div>
+                                
+                                <!-- Historical Record Toggle -->
+                                <div class="form-check form-switch px-4 py-2 rounded-3 d-flex align-items-center gap-2 mb-0" style="background-color: var(--bg-main); border: 1px solid var(--border-color);">
+                                    <input class="form-check-input ms-0" type="checkbox" id="is_historical" name="is_historical_check" <?php echo (isset($_POST['is_historical_check']) || (isset($_POST['is_historical']) && $_POST['is_historical'] == 1)) ? 'checked' : ''; ?>>
+                                    <label class="form-check-label" for="is_historical">Is this a historical paper record?</label>
+                                </div>
+                            </div>
                         </div>
-                        
-                        <!-- Historical Record Toggle -->
-                        <div class="form-check form-switch px-4 py-2 rounded-3 d-flex align-items-center gap-2" style="background-color: var(--bg-main); border: 1px solid var(--border-color);">
-                            <input class="form-check-input ms-0" type="checkbox" id="is_historical" name="is_historical_check" <?php echo (isset($_POST['is_historical_check']) || (isset($_POST['is_historical']) && $_POST['is_historical'] == 1)) ? 'checked' : ''; ?>>
-                            <label class="form-check-label" for="is_historical">Is this a historical paper record?</label>
-                        </div>
-                    </div>
 
-                    <div class="card-body p-4 p-md-5">
-                        <form action="add_student.php" method="POST" id="studentForm" class="needs-validation" novalidate hx-post="add_student.php" hx-target="#alert-container" hx-swap="innerHTML">
+                        <div class="card-body p-4 p-md-5">
                             
                             <!-- Hidden Fields -->
                             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
@@ -556,11 +565,11 @@ if (!$is_htmx):
                                         <option value="ICT" <?php echo (isset($_POST['course_code']) && $_POST['course_code'] === 'ICT') ? 'selected' : ''; ?>>ICT - ICT Technician</option>
                                     </select>
                                 </div>
-                                <div class="col-md-1">
+                                <div class="col-md-2">
                                     <label for="batch_year" class="form-label required">Year</label>
                                     <input type="text" name="batch_year" id="batch_year" maxlength="2" pattern="\d{2}" placeholder="e.g. 26" required class="form-control" value="<?php echo isset($_POST['batch_year']) ? htmlspecialchars($_POST['batch_year']) : ''; ?>">
                                 </div>
-                                <div class="col-md-2">
+                                <div class="col-md-3">
                                     <label for="batch_number" class="form-label required">Batch No</label>
                                     <input type="text" name="batch_number" id="batch_number" maxlength="3" pattern="\d{3}" placeholder="e.g. 004" required class="form-control" value="<?php echo isset($_POST['batch_number']) ? htmlspecialchars($_POST['batch_number']) : ''; ?>">
                                 </div>
@@ -572,12 +581,8 @@ if (!$is_htmx):
                                     </select>
                                 </div>
                                 <div class="col-md-2">
-                                    <label for="sequence_number" class="form-label required">Sequence No</label>
+                                    <label for="sequence_number" class="form-label required">Index No</label>
                                     <input type="number" class="form-control" id="sequence_number" name="sequence_number" required placeholder="e.g. 3782" min="1" value="<?php echo isset($_POST['sequence_number']) ? htmlspecialchars($_POST['sequence_number']) : ''; ?>">
-                                </div>
-                                <div class="col-md-2">
-                                    <label for="registration_date" class="form-label required">Reg. Date</label>
-                                    <input type="date" class="form-control" id="registration_date" name="registration_date" required value="<?php echo isset($_POST['registration_date']) ? htmlspecialchars($_POST['registration_date']) : ''; ?>">
                                 </div>
                             </div>
 

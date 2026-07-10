@@ -643,22 +643,26 @@ if (!$is_htmx):
                                 <i class="bi bi-file-earmark-text"></i> Registration Parameters
                             </div>
                             <div class="row">
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <div class="profile-label">Course Code</div>
                                     <div class="profile-value"><?php echo htmlspecialchars($student['course_code']); ?></div>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <div class="profile-label">Batch Year</div>
                                     <div class="profile-value">20<?php echo htmlspecialchars($student['batch_year']); ?></div>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-3">
+                                    <div class="profile-label">Batch Number</div>
+                                    <div class="profile-value"><?php echo htmlspecialchars($student['batch_number'] ?? ''); ?></div>
+                                </div>
+                                <div class="col-md-3">
                                     <div class="profile-label">NVQ Type</div>
                                     <div class="profile-value">
                                         <?php echo !empty($student['is_nvq']) ? htmlspecialchars($student['is_nvq']) . ' (NVQ)' : 'Non-NVQ'; ?>
                                     </div>
                                 </div>
                                 <div class="col-md-4">
-                                    <div class="profile-label">Sequence Number</div>
+                                    <div class="profile-label">Index No</div>
                                     <div class="profile-value"><?php echo htmlspecialchars($student['sequence_number']); ?></div>
                                 </div>
                                 <div class="col-md-4">
