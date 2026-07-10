@@ -478,6 +478,21 @@ if (!$is_htmx):
     </main>
 
 <?php if (!$is_htmx): ?>
+    <script>
+        document.body.addEventListener('htmx:afterSwap', function() {
+            // Re-initialize Bootstrap Form Validation
+            const forms = document.querySelectorAll('.needs-validation');
+            Array.from(forms).forEach(form => {
+                form.addEventListener('submit', event => {
+                    if (!form.checkValidity()) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        });
+    </script>
 </body>
 </html>
 <?php endif; ?>

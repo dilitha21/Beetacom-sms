@@ -180,6 +180,19 @@ if (!$is_htmx):
             color: white;
         }
 
+        .btn-accent {
+            background-color: var(--accent-color) !important;
+            color: #ffffff !important;
+            border: none !important;
+            border-radius: 8px !important;
+            font-weight: bold !important;
+            transition: background-color 0.2s ease !important;
+        }
+        .btn-accent:hover {
+            background-color: #4f46e5 !important;
+            color: #ffffff !important;
+        }
+
         .btn-clear-search {
             background-color: transparent;
             color: var(--text-secondary);
@@ -490,6 +503,20 @@ if (!$is_htmx):
                 } else {
                     link.classList.remove('active');
                 }
+            });
+        });
+
+        document.body.addEventListener('htmx:afterSwap', function() {
+            // Re-initialize Bootstrap Form Validation
+            const forms = document.querySelectorAll('.needs-validation');
+            Array.from(forms).forEach(form => {
+                form.addEventListener('submit', event => {
+                    if (!form.checkValidity()) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
             });
         });
     </script>

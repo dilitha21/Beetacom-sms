@@ -580,7 +580,7 @@ if (!$is_htmx):
                         <div><?php echo $error_msg; ?></div>
                     </div>
                     <div class="text-center">
-                        <a href="dashboard.php" class="btn-accent"><i class="bi bi-arrow-left"></i> Return to Dashboard</a>
+                        <a href="dashboard.php" class="btn btn-accent"><i class="bi bi-arrow-left"></i> Return to Dashboard</a>
                     </div>
                 <?php else: ?>
 
@@ -1161,10 +1161,10 @@ if (!$is_htmx):
                                 </form>
                             </div>
                             <div class="d-flex gap-3">
-                                <a href="dashboard.php" class="btn-muted-outline">
+                                <a href="dashboard.php" class="btn btn-muted-outline">
                                     <i class="bi bi-speedometer2"></i> Return to Dashboard
                                 </a>
-                                <a href="add_student.php" class="btn-accent">
+                                <a href="add_student.php" class="btn btn-accent">
                                     <i class="bi bi-person-plus"></i> Add New Student
                                 </a>
                             </div>
@@ -1273,6 +1273,21 @@ if (!$is_htmx):
     </main>
 
 <?php if (!$is_htmx): ?>
+    <script>
+        document.body.addEventListener('htmx:afterSwap', function() {
+            // Re-initialize Bootstrap Form Validation
+            const forms = document.querySelectorAll('.needs-validation');
+            Array.from(forms).forEach(form => {
+                form.addEventListener('submit', event => {
+                    if (!form.checkValidity()) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        });
+    </script>
 </body>
 </html>
 <?php endif; ?>
