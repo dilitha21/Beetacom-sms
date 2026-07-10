@@ -92,89 +92,17 @@ if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
-$is_htmx = isset($_SERVER['HTTP_HX_REQUEST']);
-if (!$is_htmx):
+$page_title = 'My Profile - Student Management System';
+ob_start();
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Profile - Student Management System</title>
-    <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap Icons -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
-    <!-- HTMX -->
-    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <style>
-        /* Define theme variables */
-        :root {
-            --bg-main: #f4f7fb;
-            --bg-surface: #ffffff;
-            --bg-sidebar: #ebf0f7;
-            --text-primary: #1e293b;
-            --text-secondary: #64748b;
-            --accent-color: #6366f1;
-            --border-color: #e2e8f0;
-            --border-radius: 12px;
-            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
-        }
-
-        /* HTMX Transitions & Spinner Styles */
-        .htmx-swapping { opacity: 0; transition: opacity 200ms ease-out; }
-        #global-spinner { position: fixed; top: 20px; right: 20px; z-index: 9999; display: none; }
-        .htmx-request#global-spinner { display: inline-block; }
-        .htmx-request #global-spinner { display: inline-block; }
-
-        body {
-            background-color: var(--bg-main);
-            color: var(--text-primary);
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
-            min-height: 100vh;
-            margin: 0;
-            padding: 20px;
-            overflow-x: hidden;
-            position: relative;
-            padding-bottom: 3rem;
-            line-height: 1.6;
-        }
-
-        h1, h2, h3, h4, h5, h6 {
-            color: var(--text-primary);
-            margin-top: 0;
-            font-weight: 700;
-        }
-
-        /* Navigation Bar Styling */
-        .navbar-custom {
-            background-color: var(--bg-surface);
-            border-bottom: 1px solid var(--border-color);
-            box-shadow: var(--shadow-md);
-            padding: 10px 20px;
-        }
-        .navbar-brand {
-            font-weight: 700;
-            letter-spacing: -0.5px;
-            color: var(--text-primary) !important;
-        }
-        .nav-link {
-            color: var(--text-secondary) !important;
-            font-weight: 500;
-            transition: color 0.2s ease;
-        }
-        .nav-link:hover, .nav-link.active {
-            color: var(--accent-color) !important;
-        }
-
-        /* Card panels */
         .profile-card {
             background-color: var(--bg-surface);
             border: 1px solid var(--border-color);
             border-radius: var(--border-radius);
-            overflow: hidden;
             box-shadow: var(--shadow-md);
-            margin-top: 20px;
+            overflow: hidden;
+            margin-bottom: 2rem;
         }
 
         .card-header-custom {
@@ -183,19 +111,12 @@ if (!$is_htmx):
             padding: 1.5rem 2rem;
         }
 
-        .form-label {
-            font-size: 0.85rem;
-            font-weight: 500;
-            color: var(--text-secondary);
-            margin-bottom: 0.4rem;
-        }
-
         .form-label.required::after {
             content: ' *';
             color: #ef4444;
         }
 
-        .form-control {
+        .form-control, .form-select {
             background-color: var(--bg-main);
             border: 1px solid var(--border-color);
             color: var(--text-primary);
@@ -204,82 +125,18 @@ if (!$is_htmx):
             transition: all 0.2s ease;
         }
 
-        .form-control:focus {
+        .form-control:focus, .form-select:focus {
             background-color: var(--bg-surface);
             border-color: var(--accent-color);
             color: var(--text-primary);
             box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
             outline: none;
         }
-
-        /* Buttons */
-        .btn-accent {
-            background-color: var(--accent-color);
-            color: #ffffff;
-            border: none;
-            border-radius: 8px;
-            padding: 0.75rem 2rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background-color 0.2s ease;
-        }
-        .btn-accent:hover {
-            background-color: #4f46e5;
-        }
-
-        .alert-custom-success {
-            background-color: #d1fae5;
-            border: 1px solid rgba(16, 185, 129, 0.25);
-            color: #065f46;
-            border-radius: 8px;
-        }
-        .alert-custom-error {
-            background-color: #fee2e2;
-            border: 1px solid rgba(239, 68, 68, 0.25);
-            color: #ef4444;
-            border-radius: 8px;
-        }
     </style>
-</head>
-<body hx-indicator="#global-spinner">
-
-    <!-- Global Loading Spinner -->
-    <div id="global-spinner" class="htmx-indicator spinner-border text-primary" role="status">
-        <span class="visually-hidden">Loading...</span>
-    </div>
-
-    <!-- Nav Bar -->
-    <nav class="navbar navbar-expand-lg navbar-custom sticky-top mb-4">
-        <div class="container">
-            <a class="navbar-brand d-flex align-items-center gap-2" href="dashboard.php" hx-get="dashboard.php" hx-target="#main-content" hx-push-url="true" hx-swap="innerHTML transition:true">
-                <img src="logo.jpg" alt="BMCS Logo" style="height: 38px; width: auto; object-fit: contain;">
-                <span>Beetacom</span>
-            </a>
-            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="dashboard.php" hx-get="dashboard.php" hx-target="#main-content" hx-push-url="true" hx-swap="innerHTML transition:true"><i class="bi bi-speedometer2 me-1"></i>Dashboard</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="add_student.php" hx-get="add_student.php" hx-target="#main-content" hx-push-url="true" hx-swap="innerHTML transition:true"><i class="bi bi-person-plus me-1"></i>Register</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="bulk_grading.php" hx-get="bulk_grading.php" hx-target="#main-content" hx-push-url="true" hx-swap="innerHTML transition:true"><i class="bi bi-journal-plus me-1"></i>Grades</a>
-                    </li>
-                </ul>
-                <div class="d-flex align-items-center gap-3">
-                    <a href="profile.php" class="nav-link active small" hx-get="profile.php" hx-target="#main-content" hx-push-url="true" hx-swap="innerHTML transition:true"><i class="bi bi-gear-fill me-1"></i>My Profile</a>
-                    <a href="logout.php" class="btn btn-outline-danger btn-sm rounded-pill px-3">
-                        <i class="bi bi-box-arrow-right me-1"></i>Logout
-                    </a>
-                </div>
-            </div>
-        </div>
-    </nav>
-<?php endif; ?>
+<?php
+$extra_css = ob_get_clean();
+include 'header.php';
+?>
 
     <main id="main-content">
 
@@ -377,22 +234,4 @@ if (!$is_htmx):
     </script>
     </main>
 
-<?php if (!$is_htmx): ?>
-    <script>
-        document.body.addEventListener('htmx:afterSwap', function() {
-            // Re-initialize Bootstrap Form Validation
-            const forms = document.querySelectorAll('.needs-validation');
-            Array.from(forms).forEach(form => {
-                form.addEventListener('submit', event => {
-                    if (!form.checkValidity()) {
-                        event.preventDefault();
-                        event.stopPropagation();
-                    }
-                    form.classList.add('was-validated');
-                }, false);
-            });
-        });
-    </script>
-</body>
-</html>
-<?php endif; ?>
+<?php include 'footer.php'; ?>

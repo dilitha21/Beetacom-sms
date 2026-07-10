@@ -14,11 +14,28 @@ if (!$student_id) {
     exit;
 }
 
+$success_param = filter_var($_GET['success'] ?? 0, FILTER_VALIDATE_INT);
+$error_param = $_GET['error'] ?? '';
+
 $student = null;
 $plan = null;
 $receipts = [];
 $error_msg = '';
 $success_msg = '';
+
+if ($success_param === 1) {
+    $success_msg = "Payment plan set up successfully!";
+} elseif ($success_param === 2) {
+    $success_msg = "Payment recorded successfully!";
+} elseif ($success_param === 3) {
+    $success_msg = "Payment receipt record deleted successfully.";
+} elseif ($success_param === 4) {
+    $success_msg = "Payment plan reset successfully.";
+}
+
+if ($error_param !== '') {
+    $error_msg = htmlspecialchars($error_param);
+}
 
 // 2. Fetch Student Profile Data
 try {
@@ -101,7 +118,8 @@ if ($student && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])
                     ]);
 
                     $pdo->commit();
-                    $success_msg = "Payment plan set up successfully!";
+                    header("Location: student_profile.php?id=" . $student_id . "&success=1");
+                    exit;
                 } catch (\Exception $e) {
                     $pdo->rollBack();
                     if ($e->getCode() == 23000 || strpos($e->getMessage(), '1062') !== false) {
@@ -166,7 +184,8 @@ if ($student && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])
                             ]);
 
                             $pdo->commit();
-                            $success_msg = "Payment recorded successfully!";
+                            header("Location: student_profile.php?id=" . $student_id . "&success=2");
+                            exit;
                         }
                     } else {
                         $pdo->rollBack();
@@ -209,7 +228,8 @@ if ($student && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])
                     ]);
 
                     $pdo->commit();
-                    $success_msg = "Payment receipt record deleted successfully.";
+                    header("Location: student_profile.php?id=" . $student_id . "&success=3");
+                    exit;
                 } catch (\Exception $e) {
                     $pdo->rollBack();
                     $error_msg = "Failed to delete payment receipt: " . htmlspecialchars($e->getMessage());
@@ -223,9 +243,8 @@ if ($student && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])
                 // Delete payment plan
                 $pdo->prepare("DELETE FROM payment_plans WHERE student_id = :id")->execute([':id' => $student_id]);
                 $pdo->commit();
-                $success_msg = "Payment plan reset successfully.";
-                $plan = null;
-                $receipts = [];
+                header("Location: student_profile.php?id=" . $student_id . "&success=4");
+                exit;
             } catch (\Exception $e) {
                 $pdo->rollBack();
                 $error_msg = "Failed to reset payment plan: " . htmlspecialchars($e->getMessage());
@@ -261,171 +280,51 @@ if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
-$is_htmx = isset($_SERVER['HTTP_HX_REQUEST']);
-if (!$is_htmx):
+$page_title = 'Student Profile Details - Student Registration System';
+ob_start();
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Profile Details - Student Management System</title>
-    <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap Icons -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
-    <!-- HTMX -->
-    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <style>
-        /* 1. Define your global color palette */
-        :root {
-            --bg-main: #f4f7fb;       /* Soft blue-gray background */
-            --bg-surface: #ffffff;    /* Pure white for cards/panels */
-            --bg-sidebar: #ebf0f7;    /* Slightly darker for sidebar contrast */
-            --text-primary: #1e293b;  /* Dark slate for high contrast */
-            --text-secondary: #64748b;/* Muted slate for labels/metadata */
-            --accent-color: #6366f1;   /* Vibrant Indigo */
-            --border-color: #e2e8f0;   /* Subtle borders */
-            --border-radius: 12px;
-            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
-        }
-
-        /* HTMX Transitions & Spinner Styles */
-        .htmx-swapping { opacity: 0; transition: opacity 200ms ease-out; }
-        #global-spinner { position: fixed; top: 20px; right: 20px; z-index: 9999; display: none; }
-        .htmx-request#global-spinner { display: inline-block; }
-        .htmx-request #global-spinner { display: inline-block; }
-
-        /* 2. Apply the baseline to the whole page */
-        body {
-            background-color: var(--bg-main);
-            color: var(--text-primary);
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
-            min-height: 100vh;
-            margin: 0;
-            padding: 20px;
-            overflow-x: hidden;
-            position: relative;
-            padding-bottom: 3rem;
-        }
-
-        /* 3. Force headings to pop with dark slate */
-        h1, h2, h3, h4, h5, h6 {
-            color: var(--text-primary); 
-            margin-top: 0;
-            font-weight: 700;
-        }
-
-        /* 4. Fix vanishing text in input fields and forms */
-        input, select, textarea {
-            background-color: var(--bg-surface);
-            color: var(--text-primary);
-            border: 1px solid var(--border-color);
-            padding: 10px;
-            border-radius: 4px;
-        }
-        /* Form Controls focus state */
-        .form-control:focus, .form-select:focus {
-            background-color: var(--bg-surface);
-            border-color: var(--accent-color);
-            color: var(--text-primary);
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
-        }
-        /* Form Switch custom styles */
-        .form-check-input:checked {
-            background-color: var(--accent-color);
-            border-color: var(--accent-color);
-        }
-
-        /* Navigation Bar Styling */
-        .navbar-custom {
-            background-color: var(--bg-surface);
-            border-bottom: 1px solid var(--border-color);
-            box-shadow: var(--shadow-md);
-            padding: 10px 20px;
-        }
-        .navbar-brand {
-            font-weight: 700;
-            letter-spacing: -0.5px;
-            color: var(--text-primary) !important;
-        }
-        .nav-link {
-            color: var(--text-secondary) !important;
-            font-weight: 500;
-            transition: color 0.2s ease;
-        }
-        .nav-link:hover, .nav-link.active {
-            color: var(--accent-color) !important;
-        }
-
-        /* Profile Cards */
+        /* Profile detailed review styles */
         .profile-card {
             background-color: var(--bg-surface);
             border: 1px solid var(--border-color);
             border-radius: var(--border-radius);
             box-shadow: var(--shadow-md);
             overflow: hidden;
-            margin-bottom: 2rem;
         }
-
-        .card-header-custom {
-            background-color: rgba(0, 0, 0, 0.01);
+        .profile-header {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(99, 102, 241, 0.02));
             border-bottom: 1px solid var(--border-color);
-            padding: 2rem;
+            padding: 2.5rem;
         }
-
         .profile-section-title {
-            font-size: 1.1rem;
-            font-weight: 600;
+            font-size: 1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
             color: var(--accent-color);
             border-bottom: 1px dashed var(--border-color);
             padding-bottom: 0.5rem;
-            margin-bottom: 1.25rem;
+            margin-bottom: 1rem;
             display: flex;
             align-items: center;
             gap: 0.5rem;
         }
-
         .profile-label {
             font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
             color: var(--text-secondary);
             font-weight: 600;
             margin-bottom: 0.25rem;
+            text-transform: uppercase;
+            letter-spacing: 0.25px;
         }
-
         .profile-value {
-            font-size: 1rem;
+            font-size: 0.95rem;
             color: var(--text-primary);
+            font-weight: 500;
             margin-bottom: 1.25rem;
         }
-
         /* Badges */
-        .badge-tag {
-            background-color: rgba(99, 102, 241, 0.12);
-            color: var(--accent-color);
-            border: 1px solid rgba(99, 102, 241, 0.25);
-            padding: 0.4em 0.8em;
-            border-radius: 6px;
-            font-size: 0.85rem;
-            font-weight: 500;
-            display: inline-block;
-            margin-right: 0.5rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .badge-tag-qual {
-            background-color: #d1fae5;
-            color: #10b981;
-            border: 1px solid rgba(16, 185, 129, 0.25);
-            padding: 0.4em 0.8em;
-            border-radius: 6px;
-            font-size: 0.85rem;
-            font-weight: 500;
-            display: inline-block;
-            margin-right: 0.5rem;
             margin-bottom: 0.5rem;
         }
 
@@ -525,49 +424,10 @@ if (!$is_htmx):
             background-color: var(--bg-surface);
             color: var(--text-primary);
         }
-    </style>
-</head>
-<body hx-indicator="#global-spinner">
-
-    <!-- Global Loading Spinner -->
-    <div id="global-spinner" class="htmx-indicator spinner-border text-primary" role="status">
-        <span class="visually-hidden">Loading...</span>
-    </div>
-
-    <!-- Nav Bar -->
-    <nav class="navbar navbar-expand-lg navbar-custom sticky-top mb-4">
-        <div class="container">
-            <a class="navbar-brand d-flex align-items-center gap-2" href="dashboard.php" hx-get="dashboard.php" hx-target="#main-content" hx-push-url="true" hx-swap="innerHTML transition:true">
-                <img src="logo.jpg" alt="BMCS Logo" style="height: 38px; width: auto; object-fit: contain;">
-                <span>Beetacom</span>
-            </a>
-            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="dashboard.php" hx-get="dashboard.php" hx-target="#main-content" hx-push-url="true" hx-swap="innerHTML transition:true"><i class="bi bi-speedometer2 me-1"></i>Dashboard</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="add_student.php" hx-get="add_student.php" hx-target="#main-content" hx-push-url="true" hx-swap="innerHTML transition:true"><i class="bi bi-person-plus me-1"></i>Register</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="bulk_grading.php" hx-get="bulk_grading.php" hx-target="#main-content" hx-push-url="true" hx-swap="innerHTML transition:true"><i class="bi bi-journal-plus me-1"></i>Grades</a>
-                    </li>
-                </ul>
-                <div class="d-flex align-items-center gap-3">
-                    <a href="profile.php" class="nav-link small" hx-get="profile.php" hx-target="#main-content" hx-push-url="true" hx-swap="innerHTML transition:true"><i class="bi bi-gear-fill me-1"></i>My Profile</a>
-                    <a href="logout.php" class="btn btn-outline-danger btn-sm rounded-pill px-3">
-                        <i class="bi bi-box-arrow-right me-1"></i>Logout
-                    </a>
-                </div>
-            </div>
-        </div>
-    </nav>
-<?php endif; ?>
-
-    <main id="main-content">
+<?php
+$extra_css = ob_get_clean();
+include 'header.php';
+?>
 
     <!-- Main Container -->
     <div class="container pb-5">
@@ -790,7 +650,7 @@ if (!$is_htmx):
                             <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4 border-bottom border-secondary border-opacity-10 pb-3">
                                 <h4 class="mb-0 fw-bold"><i class="bi bi-credit-card-2-front me-2 text-primary"></i>Payment System & Tracking</h4>
                                 <?php if ($plan && $plan['plan_type'] !== 'pending'): ?>
-                                    <form action="student_profile.php?id=<?php echo $student_id; ?>" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to reset this payment plan? This will delete all registered payments/receipts and return the status to Pending.');" hx-post="student_profile.php?id=<?php echo $student_id; ?>" hx-target="#main-content" hx-select="#main-content">
+                                    <form action="student_profile.php?id=<?php echo $student_id; ?>" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to reset this payment plan? This will delete all registered payments/receipts and return the status to Pending.');">
                                         <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
                                         <input type="hidden" name="action" value="reset_plan">
                                         <button type="submit" class="btn btn-outline-warning btn-sm">
@@ -809,7 +669,7 @@ if (!$is_htmx):
                                         <i class="bi bi-cash-coin"></i> Pay Now (Setup Plan)
                                     </button>
                                     
-                                    <form action="student_profile.php?id=<?php echo $student_id; ?>" method="POST" class="d-inline" hx-post="student_profile.php?id=<?php echo $student_id; ?>" hx-target="#main-content" hx-select="#main-content">
+                                    <form action="student_profile.php?id=<?php echo $student_id; ?>" method="POST" class="d-inline">
                                         <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
                                         <input type="hidden" name="action" value="pay_later">
                                         <button type="submit" class="btn btn-muted-outline px-5 py-3">
@@ -822,7 +682,7 @@ if (!$is_htmx):
                                 <div id="pay-now-form" style="display: none;">
                                     <h5 class="fw-bold mb-4 text-dark"><i class="bi bi-gear-fill me-1 text-primary"></i>Configure New Payment Plan</h5>
                                     
-                                    <form action="student_profile.php?id=<?php echo $student_id; ?>" method="POST" class="needs-validation" novalidate hx-post="student_profile.php?id=<?php echo $student_id; ?>" hx-target="#main-content" hx-select="#main-content">
+                                    <form action="student_profile.php?id=<?php echo $student_id; ?>" method="POST" class="needs-validation" novalidate>
                                         <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
                                         <input type="hidden" name="action" value="setup_plan">
 
@@ -1006,7 +866,7 @@ if (!$is_htmx):
                                                     <div class="border-top border-secondary border-opacity-10 pt-3" id="record-payment-form" style="display: none;">
                                                         <h6 class="fw-bold text-dark mb-3">Record Payment Transaction</h6>
                                                         
-                                                        <form action="student_profile.php?id=<?php echo $student_id; ?>" method="POST" class="needs-validation" novalidate hx-post="student_profile.php?id=<?php echo $student_id; ?>" hx-target="#main-content" hx-select="#main-content">
+                                                        <form action="student_profile.php?id=<?php echo $student_id; ?>" method="POST" class="needs-validation" novalidate>
                                                             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
                                                             <input type="hidden" name="action" value="record_payment">
 
@@ -1080,7 +940,7 @@ if (!$is_htmx):
                                                         <td class="fw-bold text-success">LKR <?php echo number_format(floatval($r['amount_paid']), 2); ?></td>
                                                         <td><?php echo htmlspecialchars($r['payment_date']); ?></td>
                                                         <td>
-                                                            <form action="student_profile.php?id=<?php echo $student_id; ?>" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this payment receipt? This will revert the payment status.');" hx-post="student_profile.php?id=<?php echo $student_id; ?>" hx-target="#main-content" hx-select="#main-content">
+                                                            <form action="student_profile.php?id=<?php echo $student_id; ?>" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this payment receipt? This will revert the payment status.');">
                                                                 <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
                                                                 <input type="hidden" name="action" value="delete_receipt">
                                                                 <input type="hidden" name="receipt_id" value="<?php echo $r['receipt_id']; ?>">
@@ -1272,22 +1132,4 @@ if (!$is_htmx):
     </script>
     </main>
 
-<?php if (!$is_htmx): ?>
-    <script>
-        document.body.addEventListener('htmx:afterSwap', function() {
-            // Re-initialize Bootstrap Form Validation
-            const forms = document.querySelectorAll('.needs-validation');
-            Array.from(forms).forEach(form => {
-                form.addEventListener('submit', event => {
-                    if (!form.checkValidity()) {
-                        event.preventDefault();
-                        event.stopPropagation();
-                    }
-                    form.classList.add('was-validated');
-                }, false);
-            });
-        });
-    </script>
-</body>
-</html>
-<?php endif; ?>
+<?php include 'footer.php'; ?>
