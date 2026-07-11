@@ -1,0 +1,7 @@
+# Database / Local Credentials
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log

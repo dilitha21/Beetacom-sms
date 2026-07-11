@@ -1,16 +1,42 @@
 <?php
 /**
  * db_connect.php
- * Secure database connection using PDO.
+ * Secure database connection using PDO and environment variables.
  */
 
-$host = '127.0.0.1';
-$db   = 'registration_db';
-$user = 'root';
-$pass = ''; // Default local MySQL (XAMPP/WAMP) password is empty
+// Load .env file if it exists locally
+if (file_exists(__DIR__ . '/.env')) {
+    $lines = file(__DIR__ . '/.env', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lines as $line) {
+        if (strpos(trim($line), '#') === 0) continue;
+        
+        $parts = explode('=', $line, 2);
+        if (count($parts) === 2) {
+            $name = trim($parts[0]);
+            $value = trim($parts[1]);
+            
+            // Set environment variable
+            if (getenv($name) === false) {
+                putenv("{$name}={$value}");
+                $_ENV[$name] = $value;
+                $_SERVER[$name] = $value;
+            }
+        }
+    }
+}
+
+$host = getenv('DB_HOST');
+$db   = getenv('DB_NAME');
+$user = getenv('DB_USER');
+$pass = getenv('DB_PASS');
+$port = getenv('DB_PORT');
 $charset = 'utf8mb4';
 
-$dsn = "mysql:host=$host;dbname=$db;charset=$charset";
+if (!$host || !$db || !$user) {
+    die("Database configuration is incomplete or missing in the environment.");
+}
+
+$dsn = "mysql:host=$host;port=$port;dbname=$db;charset=$charset";
 
 $options = [
     PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
@@ -21,7 +47,5 @@ $options = [
 try {
     $pdo = new PDO($dsn, $user, $pass, $options);
 } catch (\PDOException $e) {
-    // In production, log the error and display a generic message.
-    // For local development, displaying the error helps debugging.
     die("Database connection failed: " . htmlspecialchars($e->getMessage()));
 }
