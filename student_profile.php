@@ -28,7 +28,7 @@ $success_msg = '';
 if ($success_param === 1) {
     $success_msg = "Payment plan configured successfully!";
 } elseif ($success_param === 2) {
-    $success_msg = "Payment recorded successfully!";
+    $success_msg = "Installment payment recorded successfully!";
 } elseif ($success_param === 3) {
     $success_msg = "Payment record deleted successfully.";
 } elseif ($success_param === 4) {
@@ -39,9 +39,8 @@ if ($error_param !== '') {
     $error_msg = htmlspecialchars($error_param);
 }
 
-// 3. PHP Backend Logic (Phase 6 Form Submission)
+// 3. PHP Backend Logic
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
-    // CSRF Protection
     if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== ($_SESSION['csrf_token'] ?? '')) {
         $error_msg = 'Invalid session token. Please try again.';
     } else {
@@ -54,57 +53,91 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 $base_fee = floatval($_POST['base_fee'] ?? 0);
                 $plan_type = trim($_POST['plan_type'] ?? '');
                 $admission_paid = isset($_POST['admission_paid']) ? 1 : 0;
+                $setup_receipt_id = trim($_POST['setup_receipt_id'] ?? '');
 
                 if ($base_fee <= 0 || !in_array($plan_type, ['full', 'installment'])) {
                     throw new Exception("Please specify a valid base fee and payment plan type.");
                 }
-
-                // Check if a plan already exists
-                $stmt = $pdo->prepare("SELECT * FROM payment_plans WHERE student_id = ?");
-                $stmt->execute([$student_id]);
-                $existing_plan = $stmt->fetch();
-
-                if (!$existing_plan) {
-                    // New Plan: Recalculate values in PHP
-                    if ($plan_type === 'full') {
-                        $final_total = $base_fee * 0.95;
-                        $amount_paid = $final_total;
-                    } else { // installment
-                        $final_total = $base_fee;
-                        $amount_paid = $base_fee / 6;
-                    }
-
-                    // Insert plan
-                    $ins_plan = $pdo->prepare("INSERT INTO payment_plans (student_id, plan_type, base_fee, final_total, admission_paid) VALUES (?, ?, ?, ?, ?)");
-                    $ins_plan->execute([$student_id, $plan_type, $base_fee, $final_total, $admission_paid]);
-
-                    // Insert first payment record
-                    $ins_record = $pdo->prepare("INSERT INTO payment_records (student_id, amount_paid, payment_date) VALUES (?, ?, ?)");
-                    $ins_record->execute([$student_id, $amount_paid, date('Y-m-d')]);
-
-                } else {
-                    // Existing Plan: Update admission_paid toggle and insert the new calculated installment
-                    $plan_type = $existing_plan['plan_type'];
-                    $base_fee = floatval($existing_plan['base_fee']);
-                    $final_total = floatval($existing_plan['final_total']);
-
-                    if ($plan_type === 'full') {
-                        $amount_paid = $final_total;
-                    } else { // installment
-                        $amount_paid = $base_fee / 6;
-                    }
-
-                    // Update the admission_paid status in the plan
-                    $up_plan = $pdo->prepare("UPDATE payment_plans SET admission_paid = ? WHERE student_id = ?");
-                    $up_plan->execute([$admission_paid, $student_id]);
-
-                    // Insert new payment transaction record
-                    $ins_record = $pdo->prepare("INSERT INTO payment_records (student_id, amount_paid, payment_date) VALUES (?, ?, ?)");
-                    $ins_record->execute([$student_id, $amount_paid, date('Y-m-d')]);
+                if (empty($setup_receipt_id)) {
+                    throw new Exception("Please specify the Receipt ID for the first payment.");
                 }
+
+                // Check if receipt ID already exists
+                $chk_stmt = $pdo->prepare("SELECT COUNT(*) FROM payment_records WHERE receipt_id = ?");
+                $chk_stmt->execute([$setup_receipt_id]);
+                if ($chk_stmt->fetchColumn() > 0) {
+                    throw new Exception("The Receipt ID '$setup_receipt_id' already exists in the database.");
+                }
+
+                // Calculate total and first payment amount
+                if ($plan_type === 'full') {
+                    $final_total = $base_fee * 0.95;
+                    $amount_paid = $final_total;
+                } else { // installment
+                    $final_total = $base_fee;
+                    $amount_paid = $base_fee / 6;
+                }
+
+                // Insert the new plan
+                $ins_plan = $pdo->prepare("INSERT INTO payment_plans (student_id, plan_type, base_fee, final_total, admission_paid) VALUES (?, ?, ?, ?, ?)");
+                $ins_plan->execute([$student_id, $plan_type, $base_fee, $final_total, $admission_paid]);
+
+                // Insert the first payment record
+                $ins_record = $pdo->prepare("INSERT INTO payment_records (receipt_id, student_id, amount_paid, payment_date) VALUES (?, ?, ?, ?)");
+                $ins_record->execute([$setup_receipt_id, $student_id, $amount_paid, date('Y-m-d')]);
 
                 $pdo->commit();
                 header("Location: student_profile.php?id=$student_id&success=1");
+                exit();
+            }
+
+            elseif ($action === 'record_installment') {
+                $receipt_id = trim($_POST['receipt_id'] ?? '');
+
+                if (empty($receipt_id)) {
+                    throw new Exception("Please provide a Receipt ID.");
+                }
+
+                // Fetch plan
+                $stmt = $pdo->prepare("SELECT * FROM payment_plans WHERE student_id = ?");
+                $stmt->execute([$student_id]);
+                $current_plan = $stmt->fetch();
+
+                if (!$current_plan || $current_plan['plan_type'] !== 'installment') {
+                    throw new Exception("No active installment plan found for this student.");
+                }
+
+                // Calculate total paid so far
+                $rec_stmt = $pdo->prepare("SELECT SUM(amount_paid) FROM payment_records WHERE student_id = ?");
+                $rec_stmt->execute([$student_id]);
+                $total_paid = floatval($rec_stmt->fetchColumn());
+                
+                $final_total = floatval($current_plan['final_total']);
+                $balance = max($final_total - $total_paid, 0.00);
+
+                if ($balance <= 0.01) {
+                    throw new Exception("The payment plan is already fully paid.");
+                }
+
+                // Check if receipt ID already exists
+                $chk_stmt = $pdo->prepare("SELECT COUNT(*) FROM payment_records WHERE receipt_id = ?");
+                $chk_stmt->execute([$receipt_id]);
+                if ($chk_stmt->fetchColumn() > 0) {
+                    throw new Exception("The Receipt ID '$receipt_id' already exists in the database.");
+                }
+
+                // Fixed installment is base_fee / 6, or remaining balance if less
+                $installment_amount = floatval($current_plan['base_fee']) / 6;
+                if ($balance < $installment_amount) {
+                    $installment_amount = $balance;
+                }
+
+                // Record payment with auto-date (today)
+                $ins_record = $pdo->prepare("INSERT INTO payment_records (receipt_id, student_id, amount_paid, payment_date) VALUES (?, ?, ?, ?)");
+                $ins_record->execute([$receipt_id, $student_id, $installment_amount, date('Y-m-d')]);
+
+                $pdo->commit();
+                header("Location: student_profile.php?id=$student_id&success=2");
                 exit();
             }
 
@@ -117,8 +150,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             }
 
             elseif ($action === 'delete_receipt') {
-                $receipt_id = intval($_POST['receipt_id'] ?? 0);
-                if ($receipt_id > 0) {
+                $receipt_id = trim($_POST['receipt_id'] ?? '');
+                if ($receipt_id !== '') {
                     $stmt = $pdo->prepare("DELETE FROM payment_records WHERE receipt_id = ? AND student_id = ?");
                     $stmt->execute([$receipt_id, $student_id]);
                 }
@@ -153,17 +186,14 @@ try {
     if (!$student) {
         $error_msg = "No student record found with ID " . htmlspecialchars($student_id) . ".";
     } else {
-        // Fetch active payment plan
         $stmt = $pdo->prepare("SELECT * FROM payment_plans WHERE student_id = ?");
         $stmt->execute([$student_id]);
         $plan = $stmt->fetch();
 
-        // Fetch transaction records
         $stmt = $pdo->prepare("SELECT * FROM payment_records WHERE student_id = ? ORDER BY payment_date ASC, receipt_id ASC");
         $stmt->execute([$student_id]);
         $receipts = $stmt->fetchAll();
 
-        // Fetch exam records
         $stmt = $pdo->prepare("SELECT * FROM exam_results WHERE student_id = ? ORDER BY exam_date DESC, exam_id DESC");
         $stmt->execute([$student_id]);
         $exams = $stmt->fetchAll();
@@ -334,7 +364,7 @@ include 'header.php';
                 <?php if ($student && empty($error_msg)): ?>
                     <div class="profile-card mb-4">
                         
-                        <!-- Header -->
+                        <!-- Header Banner -->
                         <div class="profile-header d-flex justify-content-between align-items-center flex-wrap gap-3">
                             <div>
                                 <h3 class="mb-1 fw-bold"><?php echo htmlspecialchars($student['name']); ?></h3>
@@ -351,7 +381,7 @@ include 'header.php';
                             </div>
                         </div>
 
-                        <!-- Tab List -->
+                        <!-- Tab Header -->
                         <div class="border-bottom px-4 pt-2 bg-white">
                             <ul class="nav nav-tabs border-bottom-0" id="profileTabs" role="tablist">
                                 <li class="nav-item" role="presentation">
@@ -516,11 +546,11 @@ include 'header.php';
                                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4 border-bottom pb-3">
                                     <h4 class="mb-0 fw-bold"><i class="bi bi-credit-card-2-front me-2 text-primary"></i>Fixed Course Payment System</h4>
                                     <?php if ($plan && $plan['plan_type'] !== 'pending'): ?>
-                                        <form action="student_profile.php?id=<?php echo $student_id; ?>" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to reset this payment plan? This will wipe out all connection payments.');">
+                                        <form action="student_profile.php?id=<?php echo $student_id; ?>" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to reset this payment plan? This will clear all recorded payments.');">
                                             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
                                             <input type="hidden" name="action" value="reset_plan">
                                             <button type="submit" class="btn btn-outline-warning btn-sm">
-                                                <i class="bi bi-arrow-counterclockwise me-1"></i>Reset Payment Plan
+                                                <i class="bi bi-arrow-counterclockwise me-1"></i>Reset Plan & Start Over
                                             </button>
                                         </form>
                                     <?php endif; ?>
@@ -537,7 +567,7 @@ include 'header.php';
                                 $is_fully_paid = ($plan && $plan['plan_type'] !== 'pending' && $balance <= 0.01);
                                 ?>
 
-                                <!-- Summary Card -->
+                                <!-- 1. Summary Card -->
                                 <?php if ($plan && $plan['plan_type'] !== 'pending'): ?>
                                     <div class="card p-4 bg-light border mb-4">
                                         <h5 class="fw-bold mb-3"><i class="bi bi-info-circle text-primary me-1"></i>Payment Summary Card</h5>
@@ -561,14 +591,14 @@ include 'header.php';
                                                 <div class="fs-5 fw-bold text-success">LKR <?php echo number_format($total_paid, 2); ?></div>
                                             </div>
                                             <div class="col-md-4 mb-3">
-                                                <div class="profile-label">Remaining Balance</div>
+                                                <div class="profile-label">Remaining Balance Needed</div>
                                                 <div class="fs-5 fw-bold <?php echo $is_fully_paid ? 'text-muted' : 'text-danger'; ?>">LKR <?php echo number_format($balance, 2); ?></div>
                                             </div>
                                             <div class="col-md-4 mb-3">
                                                 <div class="profile-label">Admission Fee Status</div>
                                                 <div>
                                                     <?php if ($plan['admission_paid']): ?>
-                                                        <span class="badge bg-success-subtle text-success border border-success border-opacity-25 px-2.5 py-1.5 rounded"><i class="bi bi-check2-circle me-1"></i>Paid</span>
+                                                        <span class="badge bg-success-subtle text-success border border-success border-opacity-25 px-2.5 py-1.5 rounded"><i class="bi bi-check2-circle me-1"></i>Settled (Paid)</span>
                                                     <?php else: ?>
                                                         <span class="badge bg-danger-subtle text-danger border border-danger border-opacity-25 px-2.5 py-1.5 rounded"><i class="bi bi-x-circle me-1"></i>Pending</span>
                                                     <?php endif; ?>
@@ -578,72 +608,83 @@ include 'header.php';
                                     </div>
                                 <?php endif; ?>
 
-                                <!-- Action Buttons / Payment Forms -->
-                                <?php if (!$is_fully_paid): ?>
-                                    <div class="mb-4">
-                                        <button type="button" class="btn btn-accent" id="make-payment-btn" onclick="togglePaymentForm()">
-                                            <i class="bi bi-cash me-1"></i>Make Payment
-                                        </button>
+                                <!-- 2. SETUP PLAN FORM (If no plan is configured yet) -->
+                                <?php if (!$plan || $plan['plan_type'] === 'pending'): ?>
+                                    <div class="card p-4 border bg-white mb-4">
+                                        <h5 class="fw-bold mb-3 text-dark"><i class="bi bi-gear-fill me-1 text-primary"></i>Setup Course Payment Plan</h5>
+                                        
+                                        <form action="student_profile.php?id=<?php echo $student_id; ?>" method="POST" class="needs-validation" novalidate>
+                                            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
+                                            <input type="hidden" name="action" value="setup_payment_plan">
 
-                                        <!-- The Payment Form -->
-                                        <div id="payment-form-card" style="display: none;" class="card p-4 border mt-3 bg-white">
-                                            <h5 class="fw-bold mb-3 text-dark"><i class="bi bi-plus-circle me-1 text-primary"></i>Record / Configure Payment</h5>
-                                            
-                                            <form action="student_profile.php?id=<?php echo $student_id; ?>" method="POST" class="needs-validation" novalidate>
-                                                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
-                                                <input type="hidden" name="action" value="setup_payment_plan">
+                                            <!-- Admission Toggle (Required for first payment setup) -->
+                                            <div class="form-check form-switch mb-3">
+                                                <input class="form-check-input" type="checkbox" role="switch" id="admission_paid" name="admission_paid" value="1" checked>
+                                                <label class="form-check-label fw-bold" for="admission_paid">Admission Fee Paid</label>
+                                            </div>
 
-                                                <!-- Switch Toggle for Admission -->
-                                                <div class="form-check form-switch mb-3">
-                                                    <input class="form-check-input" type="checkbox" role="switch" id="admission_paid" name="admission_paid" value="1" <?php echo ($plan && $plan['admission_paid']) ? 'checked' : ''; ?>>
-                                                    <label class="form-check-label fw-bold" for="admission_paid">Admission Fee Paid</label>
+                                            <div class="row mb-3">
+                                                <div class="col-md-6 mb-3">
+                                                    <label for="base_fee" class="form-label fw-bold">Base Fee (LKR)</label>
+                                                    <input type="number" step="0.01" min="1" class="form-control" id="base_fee" name="base_fee" required placeholder="e.g. 60000">
                                                 </div>
-
-                                                <!-- Base Fee and Plan select (Disabled if already configured) -->
-                                                <div class="row mb-3">
-                                                    <div class="col-md-6 mb-3">
-                                                        <label for="base_fee" class="form-label fw-bold">Base Fee (LKR)</label>
-                                                        <?php if ($plan && $plan['plan_type'] !== 'pending'): ?>
-                                                            <input type="number" step="0.01" class="form-control" id="base_fee" name="base_fee" readonly value="<?php echo htmlspecialchars($plan['base_fee']); ?>">
-                                                        <?php else: ?>
-                                                            <input type="number" step="0.01" min="1" class="form-control" id="base_fee" name="base_fee" required>
-                                                        <?php endif; ?>
-                                                    </div>
-                                                    <div class="col-md-6 mb-3">
-                                                        <label for="plan_type" class="form-label fw-bold">Payment Type</label>
-                                                        <?php if ($plan && $plan['plan_type'] !== 'pending'): ?>
-                                                            <select class="form-select" id="plan_type" name="plan_type" readonly>
-                                                                <option value="<?php echo $plan['plan_type']; ?>">
-                                                                    <?php echo ($plan['plan_type'] === 'full') ? 'Full Payment (5% Discount)' : '6-Month Installment'; ?>
-                                                                </option>
-                                                            </select>
-                                                        <?php else: ?>
-                                                            <select class="form-select" id="plan_type" name="plan_type" required>
-                                                                <option value="">-- Select Payment Type --</option>
-                                                                <option value="full">Full Payment (5% Discount)</option>
-                                                                <option value="installment">6-Month Installment</option>
-                                                            </select>
-                                                        <?php endif; ?>
-                                                    </div>
+                                                <div class="col-md-6 mb-3">
+                                                    <label for="plan_type" class="form-label fw-bold">Payment Type</label>
+                                                    <select class="form-select" id="plan_type" name="plan_type" required>
+                                                        <option value="">-- Select Payment Type --</option>
+                                                        <option value="full">Full Payment (5% Discount)</option>
+                                                        <option value="installment">6-Month Installment</option>
+                                                    </select>
                                                 </div>
+                                            </div>
 
-                                                <!-- Amount Due Today -->
-                                                <div class="mb-3">
-                                                    <label for="amount_due_today" class="form-label fw-bold">Amount Due Today (LKR)</label>
+                                            <div class="row mb-3">
+                                                <div class="col-md-6 mb-3">
+                                                    <label for="setup_receipt_id" class="form-label fw-bold">Receipt ID (First Payment)</label>
+                                                    <input type="text" class="form-control" id="setup_receipt_id" name="setup_receipt_id" required placeholder="e.g. REC-12345">
+                                                </div>
+                                                <div class="col-md-6 mb-3">
+                                                    <label for="amount_due_today" class="form-label fw-bold">Amount Due Right Now (LKR)</label>
                                                     <input type="text" class="form-control fw-bold text-success" id="amount_due_today" readonly value="0.00">
                                                 </div>
+                                            </div>
 
-                                                <div class="d-flex gap-2 mt-4">
-                                                    <button type="submit" class="btn btn-accent">Submit Payment</button>
-                                                    <button type="button" class="btn btn-muted-outline" onclick="togglePaymentForm()">Cancel</button>
-                                                </div>
-                                            </form>
-                                        </div>
+                                            <button type="submit" class="btn btn-accent">Configure Plan & Record First Payment</button>
+                                        </form>
+                                    </div>
+
+                                <!-- 3. SUBSEQUENT INSTALLMENTS FORM (If plan is installment and not fully paid) -->
+                                <?php elseif ($plan['plan_type'] === 'installment' && !$is_fully_paid): 
+                                    $fixed_amount = floatval($plan['base_fee']) / 6;
+                                    if ($balance < $fixed_amount) {
+                                        $fixed_amount = $balance;
+                                    }
+                                ?>
+                                    <div class="card p-4 border bg-white mb-4">
+                                        <h5 class="fw-bold mb-2 text-dark"><i class="bi bi-cash-coin me-1 text-success"></i>Record Installment Payment</h5>
+                                        <p class="text-muted small mb-3">
+                                            Fixed amount to pay: <span class="fw-bold text-success">LKR <?php echo number_format($fixed_amount, 2); ?></span>. Date is automatically set to today.
+                                        </p>
+                                        
+                                        <form action="student_profile.php?id=<?php echo $student_id; ?>" method="POST" class="row align-items-end needs-validation" novalidate>
+                                            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
+                                            <input type="hidden" name="action" value="record_installment">
+
+                                            <div class="col-md-8 mb-3">
+                                                <label for="receipt_id" class="form-label fw-bold">Receipt ID (Manual)</label>
+                                                <input type="text" class="form-control" id="receipt_id" name="receipt_id" required placeholder="Enter Receipt ID / Invoice Number">
+                                            </div>
+                                            <div class="col-md-4 mb-3">
+                                                <button type="submit" class="btn btn-accent w-100 py-2">
+                                                    <i class="bi bi-check2-circle me-1"></i>Record Installment
+                                                </button>
+                                            </div>
+                                        </form>
                                     </div>
                                 <?php endif; ?>
 
-                                <!-- Transaction History -->
-                                <div class="card p-4 border mt-4">
+                                <!-- 4. Transaction History -->
+                                <div class="card p-4 border">
                                     <h5 class="fw-bold mb-3"><i class="bi bi-list-check me-1 text-primary"></i>Transaction History</h5>
                                     <?php if (empty($receipts)): ?>
                                         <div class="text-muted small">No payment transactions recorded yet.</div>
@@ -661,14 +702,14 @@ include 'header.php';
                                                 <tbody>
                                                     <?php foreach ($receipts as $r): ?>
                                                         <tr>
-                                                            <td class="fw-bold">REC-<?php echo str_pad($r['receipt_id'], 5, '0', STR_PAD_LEFT); ?></td>
+                                                            <td class="fw-bold"><?php echo htmlspecialchars($r['receipt_id']); ?></td>
                                                             <td class="fw-bold text-success">LKR <?php echo number_format(floatval($r['amount_paid']), 2); ?></td>
                                                             <td><?php echo htmlspecialchars($r['payment_date']); ?></td>
                                                             <td>
                                                                 <form action="student_profile.php?id=<?php echo $student_id; ?>" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this payment record?');">
                                                                     <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
                                                                     <input type="hidden" name="action" value="delete_receipt">
-                                                                    <input type="hidden" name="receipt_id" value="<?php echo $r['receipt_id']; ?>">
+                                                                    <input type="hidden" name="receipt_id" value="<?php echo htmlspecialchars($r['receipt_id']); ?>">
                                                                     <button type="submit" class="btn btn-outline-danger btn-sm">
                                                                         <i class="bi bi-trash"></i> Delete
                                                                     </button>
@@ -763,27 +804,14 @@ include 'header.php';
     <!-- Bootstrap 5 Bundle JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     
-    <!-- Dynamic JS & Form Toggle -->
+    <!-- Setup Calculations JS -->
     <script>
-        const togglePaymentForm = () => {
-            const formCard = document.getElementById('payment-form-card');
-            const makeBtn = document.getElementById('make-payment-btn');
-            
-            if (formCard.style.display === 'none') {
-                formCard.style.display = 'block';
-                makeBtn.style.display = 'none';
-                updateDueAmount();
-            } else {
-                formCard.style.display = 'none';
-                makeBtn.style.display = 'inline-block';
-            }
-        };
-
         const baseFeeInput = document.getElementById('base_fee');
         const planTypeSelect = document.getElementById('plan_type');
         const amountDueInput = document.getElementById('amount_due_today');
 
         const updateDueAmount = () => {
+            if (!baseFeeInput || !planTypeSelect) return;
             const baseFee = parseFloat(baseFeeInput.value) || 0;
             const planType = planTypeSelect.value;
             let due = 0.00;
@@ -805,7 +833,7 @@ include 'header.php';
             planTypeSelect.addEventListener('change', updateDueAmount);
         }
 
-        // Standard validation check
+        // Form validation
         (() => {
             'use strict'
             const forms = document.querySelectorAll('.needs-validation')
