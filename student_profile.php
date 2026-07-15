@@ -573,7 +573,7 @@ include 'header.php';
                                         <h5 class="fw-bold mb-3"><i class="bi bi-info-circle text-primary me-1"></i>Payment Summary Card</h5>
                                         <div class="row">
                                             <div class="col-md-4 mb-3">
-                                                <div class="profile-label">Base Fee</div>
+                                                <div class="profile-label">Course Fee</div>
                                                 <div class="fs-5 fw-bold text-dark">LKR <?php echo number_format(floatval($plan['base_fee']), 2); ?></div>
                                             </div>
                                             <div class="col-md-4 mb-3">
@@ -625,7 +625,7 @@ include 'header.php';
 
                                             <div class="row mb-3">
                                                 <div class="col-md-6 mb-3">
-                                                    <label for="base_fee" class="form-label fw-bold">Base Fee (LKR)</label>
+                                                    <label for="base_fee" class="form-label fw-bold">Course Fee (LKR)</label>
                                                     <input type="number" step="0.01" min="1" class="form-control" id="base_fee" name="base_fee" required placeholder="e.g. 60000">
                                                 </div>
                                                 <div class="col-md-6 mb-3">
