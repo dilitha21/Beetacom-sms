@@ -409,7 +409,7 @@ include 'header.php';
                                     <input type="text" name="batch_year" id="batch_year" maxlength="2" pattern="\d{2}" placeholder="26" required class="form-control" value="<?php echo isset($_POST['batch_year']) ? htmlspecialchars($_POST['batch_year']) : ''; ?>">
                                 </div>
                                 <div class="col-md-2">
-                                    <label for="batch_number" class="form-label required">Batch No</label>
+                                    <label for="batch_number" class="form-label required">Batch</label>
                                     <input type="text" name="batch_number" id="batch_number" maxlength="3" pattern="\d{3}" placeholder="004" required class="form-control" value="<?php echo isset($_POST['batch_number']) ? htmlspecialchars($_POST['batch_number']) : ''; ?>">
                                 </div>
                                 <div class="col-md-2" id="nvq_type_container">

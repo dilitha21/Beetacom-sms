@@ -196,7 +196,7 @@ include 'header.php';
                                     <input type="text" class="form-control w-100" id="batch_year" name="batch_year" maxlength="2" pattern="\d{2}" placeholder="26" required value="<?php echo htmlspecialchars($batch_year); ?>">
                                 </div>
                                 <div class="col-md-1">
-                                    <label for="batch_number" class="form-label required">Batch No</label>
+                                    <label for="batch_number" class="form-label required">Batch</label>
                                     <input type="text" class="form-control w-100" id="batch_number" name="batch_number" maxlength="3" pattern="\d{3}" placeholder="004" required value="<?php echo htmlspecialchars($batch_number); ?>">
                                 </div>
                                 <div class="col-md-3">
@@ -223,7 +223,7 @@ include 'header.php';
                         <div class="card-header-custom d-flex justify-content-between align-items-center flex-wrap gap-2">
                             <div>
                                 <h4 class="mb-1 fw-bold"><i class="bi bi-card-checklist me-2 text-primary"></i>2. Input Grades for Batch</h4>
-                                <p class="text-muted mb-0 small">Course: <strong><?php echo htmlspecialchars($course_code); ?></strong> | Batch Year: <strong>20<?php echo htmlspecialchars($batch_year); ?></strong> | Batch No: <strong><?php echo htmlspecialchars($batch_number); ?></strong></p>
+                                <p class="text-muted mb-0 small">Course: <strong><?php echo htmlspecialchars($course_code); ?></strong> | Batch Year: <strong>20<?php echo htmlspecialchars($batch_year); ?></strong> | Batch: <strong><?php echo htmlspecialchars($batch_number); ?></strong></p>
                             </div>
                             <span class="badge bg-primary px-3 py-2 rounded"><?php echo count($students); ?> Students Found</span>
                         </div>
