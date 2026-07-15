@@ -374,7 +374,7 @@ include 'header.php';
                                 <!-- Historical Record Toggle -->
                                 <div class="form-check form-switch px-4 py-2 rounded-3 d-flex align-items-center gap-2 mb-0" style="background-color: var(--bg-main); border: 1px solid var(--border-color);">
                                     <input class="form-check-input ms-0" type="checkbox" id="is_historical" name="is_historical_check" <?php echo (isset($_POST['is_historical_check']) || (isset($_POST['is_historical']) && $_POST['is_historical'] == 1)) ? 'checked' : ''; ?>>
-                                    <label class="form-check-label" for="is_historical">Is this a historical paper record?</label>
+                                    <label class="form-check-label" for="is_historical">Historical Paper Record</label>
                                 </div>
                             </div>
                         </div>

@@ -241,8 +241,6 @@ include 'header.php';
                     <p class="text-muted mb-0 small">
                         <?php if ($search_query !== ''): ?>
                             Showing search results matching "<strong><?php echo htmlspecialchars($search_query); ?></strong>"
-                        <?php else: ?>
-                            Showing latest 50 registrations
                         <?php endif; ?>
                     </p>
                 </div>

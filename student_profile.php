@@ -663,7 +663,7 @@ include 'header.php';
                                     <div class="card p-4 border bg-white mb-4">
                                         <h5 class="fw-bold mb-2 text-dark"><i class="bi bi-cash-coin me-1 text-success"></i>Record Installment Payment</h5>
                                         <p class="text-muted small mb-3">
-                                            Fixed amount to pay: <span class="fw-bold text-success">LKR <?php echo number_format($fixed_amount, 2); ?></span>. Date is automatically set to today.
+                                            Amount: <span class="fw-bold text-success">LKR <?php echo number_format($fixed_amount, 2); ?></span>
                                         </p>
                                         
                                         <form action="student_profile.php?id=<?php echo $student_id; ?>" method="POST" class="row align-items-end needs-validation" novalidate>
@@ -671,7 +671,7 @@ include 'header.php';
                                             <input type="hidden" name="action" value="record_installment">
 
                                             <div class="col-md-8 mb-3">
-                                                <label for="receipt_id" class="form-label fw-bold">Receipt ID (Manual)</label>
+                                                <label for="receipt_id" class="form-label fw-bold">Receipt ID</label>
                                                 <input type="text" class="form-control" id="receipt_id" name="receipt_id" required placeholder="Enter Receipt ID / Invoice Number">
                                             </div>
                                             <div class="col-md-4 mb-3">
