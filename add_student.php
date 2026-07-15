@@ -393,7 +393,7 @@ include 'header.php';
                             
                             <!-- Index Number Builder Grid -->
                             <div class="row g-3 mb-4">
-                                <div class="col-md-3">
+                                <div class="col-md-5">
                                     <label for="course_code" class="form-label required">Course Code</label>
                                     <select class="form-select" id="course_code" name="course_code" required>
                                         <option value="" disabled selected>Select Course</option>
@@ -404,24 +404,24 @@ include 'header.php';
                                         <option value="ICT" <?php echo (isset($_POST['course_code']) && $_POST['course_code'] === 'ICT') ? 'selected' : ''; ?>>ICT - ICT Technician</option>
                                     </select>
                                 </div>
-                                <div class="col-md-2">
+                                <div class="col-md-1">
                                     <label for="batch_year" class="form-label required">Year</label>
-                                    <input type="text" name="batch_year" id="batch_year" maxlength="2" pattern="\d{2}" placeholder="e.g. 26" required class="form-control" value="<?php echo isset($_POST['batch_year']) ? htmlspecialchars($_POST['batch_year']) : ''; ?>">
+                                    <input type="text" name="batch_year" id="batch_year" maxlength="2" pattern="\d{2}" placeholder="26" required class="form-control" value="<?php echo isset($_POST['batch_year']) ? htmlspecialchars($_POST['batch_year']) : ''; ?>">
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-2">
                                     <label for="batch_number" class="form-label required">Batch No</label>
-                                    <input type="text" name="batch_number" id="batch_number" maxlength="3" pattern="\d{3}" placeholder="e.g. 004" required class="form-control" value="<?php echo isset($_POST['batch_number']) ? htmlspecialchars($_POST['batch_number']) : ''; ?>">
+                                    <input type="text" name="batch_number" id="batch_number" maxlength="3" pattern="\d{3}" placeholder="004" required class="form-control" value="<?php echo isset($_POST['batch_number']) ? htmlspecialchars($_POST['batch_number']) : ''; ?>">
                                 </div>
                                 <div class="col-md-2" id="nvq_type_container">
                                     <label for="is_nvq" class="form-label required">Type</label>
                                     <select class="form-select" id="is_nvq" name="is_nvq" required>
-                                        <option value="" disabled selected>Select Type</option>
+                                        <option value="" disabled selected>Type</option>
                                         <option value="N" <?php echo (isset($_POST['is_nvq']) && $_POST['is_nvq'] === 'N') ? 'selected' : ''; ?>>N (NVQ)</option>
                                     </select>
                                 </div>
                                 <div class="col-md-2">
                                     <label for="sequence_number" class="form-label required">Index No</label>
-                                    <input type="number" class="form-control" id="sequence_number" name="sequence_number" required placeholder="e.g. 3782" min="1" value="<?php echo isset($_POST['sequence_number']) ? htmlspecialchars($_POST['sequence_number']) : ''; ?>">
+                                    <input type="number" class="form-control" id="sequence_number" name="sequence_number" required placeholder="3782" min="1" value="<?php echo isset($_POST['sequence_number']) ? htmlspecialchars($_POST['sequence_number']) : ''; ?>">
                                 </div>
                             </div>
 

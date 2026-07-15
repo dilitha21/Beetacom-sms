@@ -180,7 +180,7 @@ include 'header.php';
                     <div class="p-4">
                         <form action="bulk_grading.php" method="GET" class="needs-validation" novalidate>
                             <div class="row g-3">
-                                <div class="col-md-2">
+                                <div class="col-md-4">
                                     <label for="course_code" class="form-label required">Course Code</label>
                                     <select class="form-select w-100" id="course_code" name="course_code" required>
                                         <option value="" disabled selected>Select Course</option>
@@ -191,13 +191,13 @@ include 'header.php';
                                         <option value="ICT" <?php echo ($course_code === 'ICT') ? 'selected' : ''; ?>>ICT - ICT Technician</option>
                                     </select>
                                 </div>
-                                <div class="col-md-2">
-                                    <label for="batch_year" class="form-label required">Batch Year</label>
-                                    <input type="text" class="form-control w-100" id="batch_year" name="batch_year" maxlength="2" pattern="\d{2}" placeholder="e.g. 26" required value="<?php echo htmlspecialchars($batch_year); ?>">
+                                <div class="col-md-1">
+                                    <label for="batch_year" class="form-label required">Year</label>
+                                    <input type="text" class="form-control w-100" id="batch_year" name="batch_year" maxlength="2" pattern="\d{2}" placeholder="26" required value="<?php echo htmlspecialchars($batch_year); ?>">
                                 </div>
-                                <div class="col-md-2">
+                                <div class="col-md-1">
                                     <label for="batch_number" class="form-label required">Batch No</label>
-                                    <input type="text" class="form-control w-100" id="batch_number" name="batch_number" maxlength="3" pattern="\d{3}" placeholder="e.g. 004" required value="<?php echo htmlspecialchars($batch_number); ?>">
+                                    <input type="text" class="form-control w-100" id="batch_number" name="batch_number" maxlength="3" pattern="\d{3}" placeholder="004" required value="<?php echo htmlspecialchars($batch_number); ?>">
                                 </div>
                                 <div class="col-md-3">
                                     <label for="exam_name" class="form-label required">Exam Name</label>
