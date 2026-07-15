@@ -8,10 +8,14 @@
 require_once 'auth_check.php';
 require_once 'db_connect.php';
 
-$student_id = filter_var($_GET['id'] ?? 0, FILTER_VALIDATE_INT);
+if (!isset($_GET['id'])) {
+    header("Location: dashboard.php");
+    exit();
+}
+$student_id = filter_var($_GET['id'], FILTER_VALIDATE_INT);
 if (!$student_id) {
     header("Location: dashboard.php");
-    exit;
+    exit();
 }
 
 $success_param = filter_var($_GET['success'] ?? 0, FILTER_VALIDATE_INT);
@@ -51,6 +55,7 @@ try {
         $error_msg = "No student record found with ID " . htmlspecialchars($student_id) . ".";
     }
 } catch (\PDOException $e) {
+    echo "<div class='alert alert-danger'>Database query error (migration check): " . htmlspecialchars($e->getMessage()) . "</div>";
     $error_msg = "Database query failed: " . htmlspecialchars($e->getMessage());
 }
 
@@ -271,6 +276,7 @@ if ($student && empty($error_msg)) {
         $stmt->execute([':id' => $student_id]);
         $exams = $stmt->fetchAll();
     } catch (\PDOException $e) {
+        echo "<div class='alert alert-danger'>Database query error (migration check): " . htmlspecialchars($e->getMessage()) . "</div>";
         $error_msg = "Failed to retrieve payment/exam records: " . htmlspecialchars($e->getMessage());
     }
 }

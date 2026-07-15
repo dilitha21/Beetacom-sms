@@ -1,4 +1,8 @@
 <?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 /**
  * db_connect.php
  * Secure database connection using PDO and environment variables.
@@ -46,6 +50,8 @@ $options = [
 
 try {
     $pdo = new PDO($dsn, $user, $pass, $options);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 } catch (\PDOException $e) {
     die("Database connection failed: " . htmlspecialchars($e->getMessage()));
 }
+

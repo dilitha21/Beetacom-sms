@@ -143,15 +143,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ':other_course'       => $other_course
                 ]);
 
-                $new_id = $pdo->lastInsertId();
-                header("Location: student_profile.php?id=" . $new_id . "&success=1");
-                exit;
+                $student_id = $pdo->lastInsertId();
+                header("Location: student_profile.php?id=$student_id&success=1");
+                exit();
             } catch (\PDOException $e) {
                 // Check if UNIQUE constraint was violated (MySQL error code 1062)
                 if (isset($e->errorInfo[1]) && $e->errorInfo[1] == 1062) {
-                    $error_msg = 'Error: This Index Number already exists in the system.';
+                    $error_msg = '<div class="alert alert-danger">Error: This Index Number already exists in the system.</div>';
                 } else {
-                    $error_msg = 'Database Error: ' . htmlspecialchars($e->getMessage());
+                    $error_msg = '<div class="alert alert-danger">' . htmlspecialchars($e->getMessage()) . '</div>';
                 }
             }
         }
@@ -343,10 +343,14 @@ include 'header.php';
                     <?php endif; ?>
 
                     <?php if (!empty($error_msg)): ?>
-                        <div class="alert alert-custom-error d-flex align-items-center mb-4" role="alert">
-                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                            <div><?php echo htmlspecialchars($error_msg); ?></div>
-                        </div>
+                        <?php if (strpos($error_msg, 'alert-danger') !== false): ?>
+                            <?php echo $error_msg; ?>
+                        <?php else: ?>
+                            <div class="alert alert-custom-error d-flex align-items-center mb-4" role="alert">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                <div><?php echo htmlspecialchars($error_msg); ?></div>
+                            </div>
+                        <?php endif; ?>
                     <?php endif; ?>
                 </div>
 
