@@ -161,6 +161,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             }
 
             elseif ($action === 'delete_profile') {
+                if ($_SESSION['role'] !== 'super_admin') {
+                    throw new Exception("Access Denied: Only super admins can delete student profiles.");
+                }
                 $pdo->prepare("DELETE FROM exam_results WHERE student_id = ?")->execute([$student_id]);
                 $pdo->prepare("DELETE FROM payment_records WHERE student_id = ?")->execute([$student_id]);
                 $pdo->prepare("DELETE FROM payment_plans WHERE student_id = ?")->execute([$student_id]);
@@ -777,13 +780,15 @@ include 'header.php';
                         <!-- Footer Actions -->
                         <div class="profile-header border-top d-flex justify-content-between align-items-center flex-wrap gap-3">
                             <div>
-                                <form action="student_profile.php?id=<?php echo $student_id; ?>" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to permanently delete this student profile? This will remove all payment details and transaction histories.');">
-                                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
-                                    <input type="hidden" name="action" value="delete_profile">
-                                    <button type="submit" class="btn btn-outline-danger">
-                                        <i class="bi bi-trash-fill me-1"></i>Delete Student Profile
-                                    </button>
-                                </form>
+                                <?php if ($_SESSION['role'] === 'super_admin'): ?>
+                                    <form action="student_profile.php?id=<?php echo $student_id; ?>" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to permanently delete this student profile? This will remove all payment details and transaction histories.');">
+                                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
+                                        <input type="hidden" name="action" value="delete_profile">
+                                        <button type="submit" class="btn btn-outline-danger">
+                                            <i class="bi bi-trash-fill me-1"></i>Delete Student Profile
+                                        </button>
+                                    </form>
+                                <?php endif; ?>
                             </div>
                             <div class="d-flex gap-3">
                                 <a href="dashboard.php" class="btn btn-muted-outline">
@@ -848,6 +853,5 @@ include 'header.php';
             })
         })()
     </script>
-    </main>
 
 <?php include 'footer.php'; ?>

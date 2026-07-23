@@ -739,6 +739,5 @@ include 'header.php';
             }, false);
         });
     </script>
-    </main>
 
 <?php include 'footer.php'; ?>

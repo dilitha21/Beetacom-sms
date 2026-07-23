@@ -138,8 +138,6 @@ $extra_css = ob_get_clean();
 include 'header.php';
 ?>
 
-    <main id="main-content">
-
     <!-- Main Container -->
     <div class="container pb-5">
         <div class="row justify-content-center">
@@ -232,6 +230,5 @@ include 'header.php';
                 })
         })()
     </script>
-    </main>
 
 <?php include 'footer.php'; ?>

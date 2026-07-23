@@ -30,16 +30,20 @@ if ($course_code !== '' && $batch_year !== '' && $batch_number !== '') {
 
 // POST processing: Insert results inside database transaction
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'submit_bulk_grades') {
-    $post_course_code = trim($_POST['course_code'] ?? '');
-    $post_exam_name = trim($_POST['exam_name'] ?? '');
-    $post_exam_date = trim($_POST['exam_date'] ?? '');
-    $student_ids = $_POST['student_ids'] ?? [];
-
-    if ($post_course_code === '' || $post_exam_name === '' || $post_exam_date === '' || empty($student_ids)) {
-        $error_msg = "Please ensure all exam fields are entered and student records are loaded.";
+    // CSRF Protection
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== ($_SESSION['csrf_token'] ?? '')) {
+        $error_msg = 'Invalid session token. Please refresh and try again.';
     } else {
-        try {
-            $pdo->beginTransaction();
+        $post_course_code = trim($_POST['course_code'] ?? '');
+        $post_exam_name = trim($_POST['exam_name'] ?? '');
+        $post_exam_date = trim($_POST['exam_date'] ?? '');
+        $student_ids = $_POST['student_ids'] ?? [];
+
+        if ($post_course_code === '' || $post_exam_name === '' || $post_exam_date === '' || empty($student_ids)) {
+            $error_msg = "Please ensure all exam fields are entered and student records are loaded.";
+        } else {
+            try {
+                $pdo->beginTransaction();
 
             $stmt = $pdo->prepare("INSERT INTO exam_results (student_id, course_code, exam_name, exam_date, status, mark) VALUES (:student_id, :course_code, :exam_name, :exam_date, :status, :mark)");
 
@@ -72,6 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             $error_msg = "Failed to record exam grades: " . htmlspecialchars($e->getMessage());
         }
     }
+}
 }
 
 // Generate CSRF token if not set
@@ -313,6 +318,5 @@ include 'header.php';
                 })
         })()
     </script>
-    </main>
 
 <?php include 'footer.php'; ?>

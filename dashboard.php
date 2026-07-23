@@ -313,6 +313,5 @@ include 'header.php';
         </div>
 
     </div>
-    </main>
 
 <?php include 'footer.php'; ?>
