@@ -48,6 +48,12 @@ $options = [
     PDO::ATTR_EMULATE_PREPARES   => false,
 ];
 
+// Enable SSL connection if specified (typically required by TiDB Serverless)
+if (getenv('DB_SSL') === 'true') {
+    // Setting MYSQL_ATTR_SSL_CA to an empty string instructs PHP to use the system's default CA bundle
+    $options[PDO::MYSQL_ATTR_SSL_CA] = '';
+}
+
 try {
     $pdo = new PDO($dsn, $user, $pass, $options);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
