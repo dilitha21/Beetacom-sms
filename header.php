@@ -124,7 +124,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
         <div class="container">
             <a class="navbar-brand d-flex align-items-center gap-2" href="dashboard.php">
                 <img src="logo.jpg" alt="BMCS Logo" style="height: 38px; width: auto; object-fit: contain;">
-                <span>Beetacom</span>
+                <span>Beetaacom</span>
             </a>
             <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
