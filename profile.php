@@ -132,6 +132,20 @@ ob_start();
             box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
             outline: none;
         }
+
+        /* Alert stylings */
+        .alert-custom-success {
+            background-color: #d1fae5;
+            border: 1px solid rgba(16, 185, 129, 0.25);
+            color: #10b981;
+            border-radius: 8px;
+        }
+        .alert-custom-error {
+            background-color: #fee2e2;
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            color: #ef4444;
+            border-radius: 8px;
+        }
     </style>
 <?php
 $extra_css = ob_get_clean();
