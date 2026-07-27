@@ -33,6 +33,8 @@ if ($success_param === 1) {
     $success_msg = "Payment record deleted successfully.";
 } elseif ($success_param === 4) {
     $success_msg = "Payment plan reset successfully.";
+} elseif ($success_param === 5) {
+    $success_msg = "Exam record deleted successfully.";
 }
 
 if ($error_param !== '') {
@@ -157,6 +159,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 }
                 $pdo->commit();
                 header("Location: student_profile.php?id=$student_id&success=3");
+                exit();
+            }
+
+            elseif ($action === 'delete_exam') {
+                $exam_id = intval($_POST['exam_id'] ?? 0);
+                if ($exam_id > 0) {
+                    $stmt = $pdo->prepare("DELETE FROM exam_results WHERE exam_id = ? AND student_id = ?");
+                    $stmt->execute([$exam_id, $student_id]);
+                }
+                $pdo->commit();
+                header("Location: student_profile.php?id=$student_id&success=5");
                 exit();
             }
 
@@ -747,6 +760,7 @@ include 'header.php';
                                                     <th>Exam Date</th>
                                                     <th>Status</th>
                                                     <th>Mark</th>
+                                                    <th>Actions</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -766,6 +780,16 @@ include 'header.php';
                                                         </td>
                                                         <td class="fw-bold text-dark">
                                                             <?php echo ($e['mark'] !== null) ? htmlspecialchars(number_format($e['mark'], 2)) : '-'; ?>
+                                                        </td>
+                                                        <td>
+                                                            <form action="student_profile.php?id=<?php echo $student_id; ?>" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this exam record?');">
+                                                                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
+                                                                <input type="hidden" name="action" value="delete_exam">
+                                                                <input type="hidden" name="exam_id" value="<?php echo htmlspecialchars($e['exam_id']); ?>">
+                                                                <button type="submit" class="btn btn-outline-danger btn-sm">
+                                                                    <i class="bi bi-trash"></i> Delete
+                                                                </button>
+                                                            </form>
                                                         </td>
                                                     </tr>
                                                 <?php endforeach; ?>
