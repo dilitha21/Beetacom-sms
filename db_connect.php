@@ -48,8 +48,9 @@ $options = [
     PDO::ATTR_EMULATE_PREPARES   => false,
 ];
 
-// Enable SSL connection if specified (typically required by TiDB Serverless)
-if (getenv('DB_SSL') === 'true') {
+// Enable SSL connection if specified or if connecting to TiDB Cloud (.tidbcloud.com)
+$is_tidb = (strpos($host, '.tidbcloud.com') !== false);
+if (getenv('DB_SSL') === 'true' || (getenv('DB_SSL') !== 'false' && $is_tidb)) {
     $ca_path = '/etc/ssl/certs/ca-certificates.crt';
     if (file_exists($ca_path)) {
         $options[PDO::MYSQL_ATTR_SSL_CA] = $ca_path;
