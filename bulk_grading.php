@@ -205,10 +205,10 @@ include 'header.php';
                                         <option value="" disabled selected>Select Course</option>
                                         <option value="IN" <?php echo ($course_code === 'IN') ? 'selected' : ''; ?>>IN - Individual</option>
                                         <option value="KIDS" <?php echo ($course_code === 'KIDS') ? 'selected' : ''; ?>>KIDS - KIDS Course</option>
-                                        <option value="AP" <?php echo ($course_code === 'AP') ? 'selected' : ''; ?>>AP - Computer Applications Assistant (LV4)</option>
+                                        <option value="AP" <?php echo ($course_code === 'AP') ? 'selected' : ''; ?>>AP - Computer Application Assistant (LV3)</option>
                                         <option value="CGD" <?php echo ($course_code === 'CGD') ? 'selected' : ''; ?>>CGD - Computer Graphic Designer</option>
                                         <option value="PRE" <?php echo ($course_code === 'PRE') ? 'selected' : ''; ?>>PRE - Pre School Teacher Training</option>
-                                        <option value="ICT" <?php echo ($course_code === 'ICT') ? 'selected' : ''; ?>>ICT - ICT Technician (LV3)</option>
+                                        <option value="ICT" <?php echo ($course_code === 'ICT') ? 'selected' : ''; ?>>ICT - ICT Technician (LV4)</option>
                                     </select>
                                 </div>
                                 <div class="col-md-1">
