@@ -36,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $added_by           = $_SESSION['user_id'] ?? null;
 
         // Build index_number based on course_code
-        if ($course_code === 'IN') {
+        if ($course_code === 'IN' || $course_code === 'KIDS') {
             $is_nvq = null;
             $index_number = $course_code . '/' . $batch_year . '/' . $batch_number . '/' . $sequence_number;
         } else {
@@ -74,7 +74,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         // Validation checks
-        if (empty($course_code) || empty($batch_year) || empty($batch_number) || empty($sequence_number) || ($course_code !== 'IN' && empty($is_nvq)) || 
+        if (empty($course_code) || empty($batch_year) || empty($batch_number) || empty($sequence_number) || 
+            ($course_code !== 'IN' && $course_code !== 'KIDS' && empty($is_nvq)) || 
             empty($registration_date) || empty($name) || empty($address) || 
             empty($contact_no) || empty($nic) || empty($dob) || empty($gender)) {
             $error_msg = 'Please fill out all required fields.';
@@ -144,7 +145,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ]);
 
                 $student_id = $pdo->lastInsertId();
-                header("Location: student_profile.php?id=$student_id&success=1");
+                header("Location: student_profile.php?id=$student_id&success=6");
                 exit();
             } catch (\PDOException $e) {
                 // Check if UNIQUE constraint was violated (MySQL error code 1062)
@@ -398,10 +399,11 @@ include 'header.php';
                                     <select class="form-select" id="course_code" name="course_code" required>
                                         <option value="" disabled selected>Select Course</option>
                                         <option value="IN" <?php echo (isset($_POST['course_code']) && $_POST['course_code'] === 'IN') ? 'selected' : ''; ?>>IN - Individual</option>
-                                        <option value="AP" <?php echo (isset($_POST['course_code']) && $_POST['course_code'] === 'AP') ? 'selected' : ''; ?>>AP - Application Programming</option>
+                                        <option value="KIDS" <?php echo (isset($_POST['course_code']) && $_POST['course_code'] === 'KIDS') ? 'selected' : ''; ?>>KIDS - KIDS Course</option>
+                                        <option value="AP" <?php echo (isset($_POST['course_code']) && $_POST['course_code'] === 'AP') ? 'selected' : ''; ?>>AP - Computer Applications Assistant (LV4)</option>
                                         <option value="CGD" <?php echo (isset($_POST['course_code']) && $_POST['course_code'] === 'CGD') ? 'selected' : ''; ?>>CGD - Computer Graphic Designer</option>
                                         <option value="PRE" <?php echo (isset($_POST['course_code']) && $_POST['course_code'] === 'PRE') ? 'selected' : ''; ?>>PRE - Pre School Teacher Training</option>
-                                        <option value="ICT" <?php echo (isset($_POST['course_code']) && $_POST['course_code'] === 'ICT') ? 'selected' : ''; ?>>ICT - ICT Technician</option>
+                                        <option value="ICT" <?php echo (isset($_POST['course_code']) && $_POST['course_code'] === 'ICT') ? 'selected' : ''; ?>>ICT - ICT Technician (LV3)</option>
                                     </select>
                                 </div>
                                 <div class="col-md-1">
@@ -675,12 +677,12 @@ include 'header.php';
                 const sequenceNumber = sequenceNumberInput.value || '';
 
                 // If critical parameters are empty, leave preview blank
-                if (!courseCode || !batchYear || !batchNumber || !sequenceNumber || (courseCode !== 'IN' && !isNvq)) {
+                if (!courseCode || !batchYear || !batchNumber || !sequenceNumber || (courseCode !== 'IN' && courseCode !== 'KIDS' && !isNvq)) {
                     indexNumberInput.value = '';
                     return;
                 }
 
-                if (courseCode === 'IN') {
+                if (courseCode === 'IN' || courseCode === 'KIDS') {
                     indexNumberInput.value = `${courseCode}/${batchYear}/${batchNumber}/${sequenceNumber}`;
                 } else {
                     indexNumberInput.value = `${courseCode}/${batchYear}/${batchNumber}/${isNvq}/${sequenceNumber}`;
@@ -690,7 +692,7 @@ include 'header.php';
             const handleCourseCodeChange = () => {
                 const courseCode = courseCodeSelect.value || '';
 
-                if (courseCode === 'IN') {
+                if (courseCode === 'IN' || courseCode === 'KIDS') {
                     // Disable and reset is_nvq
                     isNvqSelect.disabled = true;
                     isNvqSelect.removeAttribute('required');

@@ -35,6 +35,8 @@ if ($success_param === 1) {
     $success_msg = "Payment plan reset successfully.";
 } elseif ($success_param === 5) {
     $success_msg = "Exam record deleted successfully.";
+} elseif ($success_param === 6) {
+    $success_msg = "Student registered successfully";
 }
 
 if ($error_param !== '') {

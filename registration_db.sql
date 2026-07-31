@@ -21,10 +21,10 @@ CREATE TABLE `users` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Insert default super_admin account
--- Username: 'Beetacomsuperadmin'
+-- Username: 'Beetaacomsuperadmin'
 -- Password: 'Beetaacommri1971' (Hashed using PHP's password_hash() with PASSWORD_DEFAULT)
 INSERT INTO `users` (`username`, `password_hash`, `role`) VALUES (
-    'Beetacomsuperadmin', 
+    'Beetaacomsuperadmin', 
     '$2y$10$BNsaoK3efdbTFeJvTJOSpOdOZcRI1.flhzpZTbeJcgTmUTAeCNc/K', 
     'super_admin'
 );
