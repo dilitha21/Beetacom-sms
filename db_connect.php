@@ -50,8 +50,14 @@ $options = [
 
 // Enable SSL connection if specified (typically required by TiDB Serverless)
 if (getenv('DB_SSL') === 'true') {
-    // Setting MYSQL_ATTR_SSL_CA to an empty string instructs PHP to use the system's default CA bundle
-    $options[PDO::MYSQL_ATTR_SSL_CA] = '';
+    $ca_path = '/etc/ssl/certs/ca-certificates.crt';
+    if (file_exists($ca_path)) {
+        $options[PDO::MYSQL_ATTR_SSL_CA] = $ca_path;
+        $options[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = true;
+    } else {
+        // Fallback for local development or Windows platforms
+        $options[PDO::MYSQL_ATTR_SSL_CA] = '';
+    }
 }
 
 try {
