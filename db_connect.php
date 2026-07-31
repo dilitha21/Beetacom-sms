@@ -30,17 +30,16 @@ if (file_exists(__DIR__ . '/.env')) {
 }
 
 $host = getenv('DB_HOST');
+$port = getenv('DB_PORT');
 $db   = getenv('DB_NAME');
 $user = getenv('DB_USER');
 $pass = getenv('DB_PASS');
-$port = getenv('DB_PORT');
-$charset = 'utf8mb4';
 
 if (!$host || !$db || !$user) {
     die("Database configuration is incomplete or missing in the environment.");
 }
 
-$dsn = "mysql:host=$host;port=$port;dbname=$db;charset=$charset";
+$dsn = "mysql:host=$host;port=$port;dbname=$db;charset=utf8mb4";
 
 $options = [
     PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
@@ -48,23 +47,16 @@ $options = [
     PDO::ATTR_EMULATE_PREPARES   => false,
 ];
 
-// Enable SSL connection if specified or if connecting to TiDB Cloud (.tidbcloud.com)
-$is_tidb = (strpos($host, '.tidbcloud.com') !== false);
-if (getenv('DB_SSL') === 'true' || (getenv('DB_SSL') !== 'false' && $is_tidb)) {
-    $ca_path = '/etc/ssl/certs/ca-certificates.crt';
-    if (file_exists($ca_path)) {
-        $options[PDO::MYSQL_ATTR_SSL_CA] = $ca_path;
-        $options[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = true;
-    } else {
-        // Fallback for local development or Windows platforms
-        $options[PDO::MYSQL_ATTR_SSL_CA] = '';
-    }
+// Enforce SSL for TiDB Serverless (Render standard path) with local safety fallback
+$ca_file = '/etc/ssl/certs/ca-certificates.crt';
+if (file_exists($ca_file)) {
+    $options[PDO::MYSQL_ATTR_SSL_CA] = $ca_file;
+    $options[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = true;
 }
 
 try {
     $pdo = new PDO($dsn, $user, $pass, $options);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 } catch (\PDOException $e) {
-    die("Database connection failed: " . htmlspecialchars($e->getMessage()));
+    die("Database connection failed: " . $e->getMessage());
 }
-
+?>
