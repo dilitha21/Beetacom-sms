@@ -56,6 +56,6 @@ if (!isset($_SESSION['user_id'])) {
     }
 
     // Prevent session fixation or caching issues by redirecting
-    header("Location: login.php");
+    header("Location: index.php");
     exit();
 }

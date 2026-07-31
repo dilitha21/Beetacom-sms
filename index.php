@@ -1,6 +1,6 @@
 <?php
 /**
- * login.php
+ * index.php
  * Secure login form and authentication using PDO.
  */
 
@@ -285,7 +285,7 @@ if (empty($_SESSION['csrf_token'])) {
             </div>
         <?php endif; ?>
 
-        <form action="login.php" method="POST" autocomplete="off">
+        <form action="index.php" method="POST" autocomplete="off">
             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
 
             <div class="mb-3">
