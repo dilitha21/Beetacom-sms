@@ -761,35 +761,27 @@ include 'header.php';
                                 <h4 class="mb-4 fw-bold"><i class="bi bi-journal-check me-2 text-primary"></i>Exam Records & Grades</h4>
 
                                 <!-- Certificate Issuance Status Form -->
-                                <form action="student_profile.php?id=<?php echo $student_id; ?>" method="POST" class="mb-5 p-4 border border-secondary border-opacity-10 rounded shadow-sm" style="background: var(--bg-surface);">
+                                <form action="student_profile.php?id=<?php echo $student_id; ?>" method="POST" class="mb-4 p-3 border border-secondary border-opacity-10 rounded d-flex flex-wrap align-items-center justify-content-between gap-3" style="background: var(--bg-surface);">
                                     <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
                                     <input type="hidden" name="action" value="update_certificates">
                                     
-                                    <h5 class="fw-bold mb-4 text-primary">
-                                        <i class="bi bi-patch-check me-2"></i>Certificate Issuance Status
-                                    </h5>
-                                    
-                                    <div class="row g-4">
-                                        <div class="col-md-6">
-                                            <div class="form-check form-switch p-3 border border-secondary border-opacity-10 rounded d-flex align-items-center" style="background-color: var(--bg-main);">
-                                                <input class="form-check-input ms-0 me-3" type="checkbox" role="switch" id="cert_completion_issued" name="cert_completion_issued" value="1" <?php echo ($student['cert_completion_issued'] == 1) ? 'checked' : ''; ?> style="width: 2.5em; height: 1.25em; cursor: pointer;">
-                                                <label class="form-check-label fw-semibold text-dark mb-0" for="cert_completion_issued" style="cursor: pointer;">Certificate of Completion Issued</label>
-                                            </div>
+                                    <div class="d-flex flex-wrap align-items-center gap-3">
+                                        <h6 class="fw-bold mb-0 text-secondary me-2">
+                                            <i class="bi bi-patch-check me-1 text-primary"></i>Certificate Status:
+                                        </h6>
+                                        <div class="form-check mb-0">
+                                            <input class="form-check-input" type="checkbox" id="cert_completion_issued" name="cert_completion_issued" value="1" <?php echo ($student['cert_completion_issued'] == 1) ? 'checked' : ''; ?> style="cursor: pointer;">
+                                            <label class="form-check-label small fw-semibold text-dark" for="cert_completion_issued" style="cursor: pointer;">Certificate of Completion Issued</label>
                                         </div>
-                                        
-                                        <div class="col-md-6">
-                                            <div class="form-check form-switch p-3 border border-secondary border-opacity-10 rounded d-flex align-items-center" style="background-color: var(--bg-main);">
-                                                <input class="form-check-input ms-0 me-3" type="checkbox" role="switch" id="english_cert_issued" name="english_cert_issued" value="1" <?php echo ($student['english_cert_issued'] == 1) ? 'checked' : ''; ?> style="width: 2.5em; height: 1.25em; cursor: pointer;">
-                                                <label class="form-check-label fw-semibold text-dark mb-0" for="english_cert_issued" style="cursor: pointer;">English Course Certificate Issued</label>
-                                            </div>
+                                        <div class="form-check mb-0 ms-md-3">
+                                            <input class="form-check-input" type="checkbox" id="english_cert_issued" name="english_cert_issued" value="1" <?php echo ($student['english_cert_issued'] == 1) ? 'checked' : ''; ?> style="cursor: pointer;">
+                                            <label class="form-check-label small fw-semibold text-dark" for="english_cert_issued" style="cursor: pointer;">English Course Certificate Issued</label>
                                         </div>
                                     </div>
                                     
-                                    <div class="mt-4 text-end">
-                                        <button type="submit" class="btn btn-primary px-4">
-                                            <i class="bi bi-save me-2"></i>Save Certificate Status
-                                        </button>
-                                    </div>
+                                    <button type="submit" class="btn btn-primary btn-sm px-3 py-1.5">
+                                        <i class="bi bi-save me-1"></i>Save Status
+                                    </button>
                                 </form>
                                 
                                 <?php if (empty($exams)): ?>
