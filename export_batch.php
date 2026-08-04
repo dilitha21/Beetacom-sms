@@ -103,7 +103,7 @@ try {
 
         // Excel-safe string formatting to protect leading zeros and large numeric values
         $safe_receipt = ($row['receipt_id'] !== null) ? "\t" . $row['receipt_id'] : 'N/A';
-        $payment_date = ($row['payment_date'] !== null) ? $row['payment_date'] : 'N/A';
+        $payment_date = ($row['payment_date'] !== null) ? "\t" . $row['payment_date'] : 'N/A';
         $installment_amount = ($row['installment_amount'] !== null) ? number_format(floatval($row['installment_amount']), 2, '.', '') : '0.00';
 
         if ($is_repeated) {
