@@ -75,6 +75,10 @@ CREATE TABLE `students` (
     `beetaa_kids` TINYINT(1) NOT NULL DEFAULT 0,
     `other_course` TINYINT(1) NOT NULL DEFAULT 0,
     
+    -- Certificate Issuance Status
+    `cert_completion_issued` TINYINT(1) NOT NULL DEFAULT 0,
+    `english_cert_issued` TINYINT(1) NOT NULL DEFAULT 0,
+    
     PRIMARY KEY (`id`),
     UNIQUE KEY `idx_unique_index_number` (`index_number`),
     

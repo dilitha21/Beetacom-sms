@@ -22,46 +22,40 @@ if ($batch_year === '') {
 }
 
 try {
-    // 3. TiDB Compatible Group-By SQL Query
+    // 3. TiDB Compatible SQL Query to list individual payment records per student
     $sql = "SELECT 
+                s.id AS student_id,
                 s.index_number, 
                 s.name, 
                 s.nic, 
                 s.contact_no,
+                s.cert_completion_issued,
+                s.english_cert_issued,
                 p.plan_type, 
                 COALESCE(p.base_fee, 0.00) AS base_fee, 
                 COALESCE(p.final_total, 0.00) AS final_total, 
                 COALESCE(p.admission_paid, 0) AS admission_paid,
-                COALESCE(SUM(pr.amount_paid), 0.00) AS total_paid,
-                CASE 
-                    WHEN p.plan_type IS NULL OR p.plan_type = 'pending' THEN 'Pending'
-                    WHEN COALESCE(SUM(pr.amount_paid), 0.00) >= p.final_total THEN 'Completed' 
-                    ELSE 'Pending' 
-                END AS payment_status,
-                COALESCE(
+                -- Subquery for cumulative total paid by student
+                (SELECT COALESCE(SUM(amount_paid), 0.00) FROM payment_records WHERE student_id = s.id) AS total_paid,
+                -- Individual payment record fields
+                pr.receipt_id,
+                pr.payment_date,
+                pr.amount_paid AS installment_amount,
+                -- Subquery for aggregated exam records
+                (SELECT COALESCE(
                     GROUP_CONCAT(
                         CONCAT(er.exam_name, ': ', er.status, ' (', COALESCE(er.mark, 'N/A'), ')')
                         ORDER BY er.exam_date DESC, er.exam_id DESC
                         SEPARATOR ' | '
                     ), 
                     'No Exam Records'
+                 ) FROM exam_results er WHERE er.student_id = s.id
                 ) AS exam_records
             FROM students s
             LEFT JOIN payment_plans p ON s.id = p.student_id
             LEFT JOIN payment_records pr ON s.id = pr.student_id
-            LEFT JOIN exam_results er ON s.id = er.student_id
             WHERE s.batch_year = :batch_year
-            GROUP BY 
-                s.id, 
-                s.index_number, 
-                s.name, 
-                s.nic, 
-                s.contact_no, 
-                p.plan_type, 
-                p.base_fee, 
-                p.final_total, 
-                p.admission_paid
-            ORDER BY s.index_number ASC";
+            ORDER BY s.index_number ASC, pr.payment_date ASC, pr.receipt_id ASC";
 
     $stmt = $pdo->prepare($sql);
     $stmt->execute([':batch_year' => $batch_year]);
@@ -92,6 +86,11 @@ try {
         'Total Paid So Far', 
         'Remaining Balance', 
         'Payment Status', 
+        'Receipt Number', 
+        'Payment Date', 
+        'Amount Paid (This Installment)', 
+        'Certificate of Completion', 
+        'English Course Certificate', 
         'All Exam Records'
     ]);
 
@@ -105,6 +104,14 @@ try {
         $total_paid = floatval($row['total_paid']);
         $remaining_balance = max($final_total - $total_paid, 0.00);
 
+        // Calculate payment status dynamically
+        $payment_status = 'Pending';
+        if ($row['plan_type'] !== null && $row['plan_type'] !== 'pending') {
+            if ($total_paid >= $final_total) {
+                $payment_status = 'Completed';
+            }
+        }
+
         // Format Plan Type for readable text
         $plan_type = 'Pending';
         if ($row['plan_type'] === 'full') {
@@ -116,6 +123,13 @@ try {
         // Excel-safe string formatting to protect leading zeros and large numeric values
         $safe_nic = "\t" . $row['nic'];
         $safe_contact = "\t" . $row['contact_no'];
+        $safe_receipt = ($row['receipt_id'] !== null) ? "\t" . $row['receipt_id'] : 'N/A';
+        $payment_date = ($row['payment_date'] !== null) ? $row['payment_date'] : 'N/A';
+        $installment_amount = ($row['installment_amount'] !== null) ? number_format(floatval($row['installment_amount']), 2, '.', '') : '0.00';
+
+        // Certificate text
+        $cert_completion_text = ($row['cert_completion_issued'] == 1) ? 'Yes' : 'No';
+        $english_cert_text = ($row['english_cert_issued'] == 1) ? 'Yes' : 'No';
 
         // Write row
         fputcsv($output, [
@@ -129,7 +143,12 @@ try {
             number_format($final_total, 2, '.', ''),
             number_format($total_paid, 2, '.', ''),
             number_format($remaining_balance, 2, '.', ''),
-            $row['payment_status'],
+            $payment_status,
+            $safe_receipt,
+            $payment_date,
+            $installment_amount,
+            $cert_completion_text,
+            $english_cert_text,
             $row['exam_records']
         ]);
     }
