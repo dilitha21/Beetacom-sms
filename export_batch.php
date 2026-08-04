@@ -95,62 +95,91 @@ try {
     ]);
 
     // 6. Loop and format records
+    $last_student_id = null;
     foreach ($results as $row) {
-        // Transform admission_paid boolean
-        $admission_text = ($row['admission_paid'] == 1) ? 'Yes' : 'No';
-
-        // Calculate remaining balance dynamically
-        $final_total = floatval($row['final_total']);
-        $total_paid = floatval($row['total_paid']);
-        $remaining_balance = max($final_total - $total_paid, 0.00);
-
-        // Calculate payment status dynamically
-        $payment_status = 'Pending';
-        if ($row['plan_type'] !== null && $row['plan_type'] !== 'pending') {
-            if ($total_paid >= $final_total) {
-                $payment_status = 'Completed';
-            }
-        }
-
-        // Format Plan Type for readable text
-        $plan_type = 'Pending';
-        if ($row['plan_type'] === 'full') {
-            $plan_type = 'Full Payment';
-        } elseif ($row['plan_type'] === 'installment') {
-            $plan_type = 'Installment';
-        }
+        $student_id = $row['student_id'];
+        $is_repeated = ($student_id === $last_student_id);
+        $last_student_id = $student_id;
 
         // Excel-safe string formatting to protect leading zeros and large numeric values
-        $safe_nic = "\t" . $row['nic'];
-        $safe_contact = "\t" . $row['contact_no'];
         $safe_receipt = ($row['receipt_id'] !== null) ? "\t" . $row['receipt_id'] : 'N/A';
         $payment_date = ($row['payment_date'] !== null) ? $row['payment_date'] : 'N/A';
         $installment_amount = ($row['installment_amount'] !== null) ? number_format(floatval($row['installment_amount']), 2, '.', '') : '0.00';
 
-        // Certificate text
-        $cert_completion_text = ($row['cert_completion_issued'] == 1) ? 'Yes' : 'No';
-        $english_cert_text = ($row['english_cert_issued'] == 1) ? 'Yes' : 'No';
+        if ($is_repeated) {
+            // Write row with empty non-payment fields
+            fputcsv($output, [
+                '', // Index Number
+                '', // Name
+                '', // NIC
+                '', // Contact Number
+                '', // Admission Paid
+                '', // Plan Type
+                '', // Base Fee
+                '', // Final Total Expected
+                '', // Total Paid So Far
+                '', // Remaining Balance
+                '', // Payment Status
+                $safe_receipt,
+                $payment_date,
+                $installment_amount,
+                '', // Certificate of Completion
+                '', // English Course Certificate
+                ''  // All Exam Records
+            ]);
+        } else {
+            // Transform admission_paid boolean
+            $admission_text = ($row['admission_paid'] == 1) ? 'Yes' : 'No';
 
-        // Write row
-        fputcsv($output, [
-            $row['index_number'],
-            $row['name'],
-            $safe_nic,
-            $safe_contact,
-            $admission_text,
-            $plan_type,
-            number_format(floatval($row['base_fee']), 2, '.', ''),
-            number_format($final_total, 2, '.', ''),
-            number_format($total_paid, 2, '.', ''),
-            number_format($remaining_balance, 2, '.', ''),
-            $payment_status,
-            $safe_receipt,
-            $payment_date,
-            $installment_amount,
-            $cert_completion_text,
-            $english_cert_text,
-            $row['exam_records']
-        ]);
+            // Calculate remaining balance dynamically
+            $final_total = floatval($row['final_total']);
+            $total_paid = floatval($row['total_paid']);
+            $remaining_balance = max($final_total - $total_paid, 0.00);
+
+            // Calculate payment status dynamically
+            $payment_status = 'Pending';
+            if ($row['plan_type'] !== null && $row['plan_type'] !== 'pending') {
+                if ($total_paid >= $final_total) {
+                    $payment_status = 'Completed';
+                }
+            }
+
+            // Format Plan Type for readable text
+            $plan_type = 'Pending';
+            if ($row['plan_type'] === 'full') {
+                $plan_type = 'Full Payment';
+            } elseif ($row['plan_type'] === 'installment') {
+                $plan_type = 'Installment';
+            }
+
+            $safe_nic = "\t" . $row['nic'];
+            $safe_contact = "\t" . $row['contact_no'];
+
+            // Certificate text
+            $cert_completion_text = ($row['cert_completion_issued'] == 1) ? 'Yes' : 'No';
+            $english_cert_text = ($row['english_cert_issued'] == 1) ? 'Yes' : 'No';
+
+            // Write row with full details
+            fputcsv($output, [
+                $row['index_number'],
+                $row['name'],
+                $safe_nic,
+                $safe_contact,
+                $admission_text,
+                $plan_type,
+                number_format(floatval($row['base_fee']), 2, '.', ''),
+                number_format($final_total, 2, '.', ''),
+                number_format($total_paid, 2, '.', ''),
+                number_format($remaining_balance, 2, '.', ''),
+                $payment_status,
+                $safe_receipt,
+                $payment_date,
+                $installment_amount,
+                $cert_completion_text,
+                $english_cert_text,
+                $row['exam_records']
+            ]);
+        }
     }
 
     fclose($output);
