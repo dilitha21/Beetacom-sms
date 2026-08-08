@@ -403,13 +403,6 @@ include 'header.php';
                                     Official Index: <span class="fw-bold text-primary"><?php echo htmlspecialchars($student['index_number']); ?></span>
                                 </p>
                             </div>
-                            <div>
-                                <?php if ($student['is_historical']): ?>
-                                    <span class="badge-historical"><i class="bi bi-file-earmark-lock-fill me-1"></i>Historical Paper Record</span>
-                                <?php else: ?>
-                                    <span class="badge-active"><i class="bi bi-cloud-check-fill me-1"></i>Live Digital Entry</span>
-                                <?php endif; ?>
-                            </div>
                         </div>
 
                         <!-- Tab Header -->
