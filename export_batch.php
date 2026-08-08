@@ -100,10 +100,10 @@ try {
         'Total Paid So Far', 
         'Remaining Balance', 
         'Payment Status', 
-        'Receipt Number', 
         'Payment Date', 
-        'Amount Paid (This Installment)', 
         'Installment', 
+        'Receipt Number', 
+        'Amount Paid (This Installment)', 
         'Certificate of Completion', 
         'English Course Certificate', 
         'All Exam Records'
@@ -147,10 +147,10 @@ try {
                 '', // Total Paid So Far
                 '', // Remaining Balance
                 '', // Payment Status
-                $safe_receipt,
                 $payment_date,
-                $installment_amount,
                 $inst_text,
+                $safe_receipt,
+                $installment_amount,
                 '', // Certificate of Completion
                 '', // English Course Certificate
                 ''  // All Exam Records
@@ -200,10 +200,10 @@ try {
                 number_format($total_paid, 2, '.', ''),
                 number_format($remaining_balance, 2, '.', ''),
                 $payment_status,
-                $safe_receipt,
                 $payment_date,
-                $installment_amount,
                 $inst_text,
+                $safe_receipt,
+                $installment_amount,
                 $cert_completion_text,
                 $english_cert_text,
                 $row['exam_records']
