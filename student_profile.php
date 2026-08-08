@@ -18,6 +18,20 @@ if (!$student_id) {
 $success_param = filter_var($_GET['success'] ?? 0, FILTER_VALIDATE_INT);
 $error_param = $_GET['error'] ?? '';
 
+if (!function_exists('get_ordinal')) {
+    function get_ordinal($number) {
+        if (!is_numeric($number)) return 'N/A';
+        $number = (int)$number;
+        if ($number <= 0) return 'N/A';
+        $ends = array('th','st','nd','rd','th','th','th','th','th','th');
+        if ((($number % 100) >= 11) && (($number % 100) <= 13)) {
+            return $number. 'th';
+        } else {
+            return $number. $ends[$number % 10];
+        }
+    }
+}
+
 $student = null;
 $plan = null;
 $receipts = [];
@@ -685,7 +699,7 @@ include 'header.php';
                                     }
                                 ?>
                                     <div class="card p-4 border bg-white mb-4">
-                                        <h5 class="fw-bold mb-2 text-dark"><i class="bi bi-cash-coin me-1 text-success"></i>Record Installment Payment</h5>
+                                        <h5 class="fw-bold mb-2 text-dark"><i class="bi bi-cash-coin me-1 text-success"></i>Record <?php echo get_ordinal(count($receipts) + 1); ?> Installment Payment</h5>
                                         <p class="text-muted small mb-3">
                                             Amount: <span class="fw-bold text-success">LKR <?php echo number_format($fixed_amount, 2); ?></span>
                                         </p>
@@ -693,14 +707,14 @@ include 'header.php';
                                         <form action="student_profile.php?id=<?php echo $student_id; ?>" method="POST" class="row align-items-end needs-validation" novalidate>
                                             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
                                             <input type="hidden" name="action" value="record_installment">
-
+ 
                                             <div class="col-md-8 mb-3">
                                                 <label for="receipt_id" class="form-label fw-bold">Receipt ID</label>
                                                 <input type="text" class="form-control" id="receipt_id" name="receipt_id" required placeholder="Enter Receipt ID / Invoice Number">
                                             </div>
                                             <div class="col-md-4 mb-3">
                                                 <button type="submit" class="btn btn-accent w-100 py-2">
-                                                    <i class="bi bi-check2-circle me-1"></i>Record Installment
+                                                    <i class="bi bi-check2-circle me-1"></i>Record <?php echo get_ordinal(count($receipts) + 1); ?> Installment
                                                 </button>
                                             </div>
                                         </form>
@@ -718,15 +732,25 @@ include 'header.php';
                                                 <thead>
                                                     <tr>
                                                         <th>Receipt ID</th>
+                                                        <th>Installment</th>
                                                         <th>Amount Paid</th>
                                                         <th>Payment Date</th>
                                                         <th>Actions</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    <?php foreach ($receipts as $r): ?>
+                                                    <?php 
+                                                    $inst_count = 1;
+                                                    foreach ($receipts as $r): 
+                                                        if ($plan['plan_type'] === 'installment') {
+                                                            $inst_text = get_ordinal($inst_count);
+                                                        } else {
+                                                            $inst_text = 'Full Payment';
+                                                        }
+                                                    ?>
                                                         <tr>
                                                             <td class="fw-bold"><?php echo htmlspecialchars($r['receipt_id']); ?></td>
+                                                            <td><span class="badge bg-secondary"><?php echo $inst_text; ?></span></td>
                                                             <td class="fw-bold text-success">LKR <?php echo number_format(floatval($r['amount_paid']), 2); ?></td>
                                                             <td><?php echo htmlspecialchars($r['payment_date']); ?></td>
                                                             <td>
@@ -740,7 +764,10 @@ include 'header.php';
                                                                 </form>
                                                             </td>
                                                         </tr>
-                                                    <?php endforeach; ?>
+                                                    <?php 
+                                                        $inst_count++;
+                                                    endforeach; 
+                                                    ?>
                                                 </tbody>
                                             </table>
                                         </div>

@@ -21,6 +21,20 @@ if ($batch_year === '') {
     die("Bad Request: Batch year is required.");
 }
 
+if (!function_exists('get_ordinal')) {
+    function get_ordinal($number) {
+        if (!is_numeric($number)) return 'N/A';
+        $number = (int)$number;
+        if ($number <= 0) return 'N/A';
+        $ends = array('th','st','nd','rd','th','th','th','th','th','th');
+        if ((($number % 100) >= 11) && (($number % 100) <= 13)) {
+            return $number. 'th';
+        } else {
+            return $number. $ends[$number % 10];
+        }
+    }
+}
+
 try {
     // 3. TiDB Compatible SQL Query to list individual payment records per student
     $sql = "SELECT 
@@ -89,6 +103,7 @@ try {
         'Receipt Number', 
         'Payment Date', 
         'Amount Paid (This Installment)', 
+        'Installment', 
         'Certificate of Completion', 
         'English Course Certificate', 
         'All Exam Records'
@@ -96,15 +111,27 @@ try {
 
     // 6. Loop and format records
     $last_student_id = null;
+    $installment_counter = 0;
     foreach ($results as $row) {
         $student_id = $row['student_id'];
         $is_repeated = ($student_id === $last_student_id);
-        $last_student_id = $student_id;
+        
+        if (!$is_repeated) {
+            $last_student_id = $student_id;
+            $installment_counter = 0;
+        }
 
         // Excel-safe string formatting to protect leading zeros and large numeric values
         $safe_receipt = ($row['receipt_id'] !== null) ? "\t" . $row['receipt_id'] : 'N/A';
         $payment_date = ($row['payment_date'] !== null) ? "\t" . $row['payment_date'] : 'N/A';
         $installment_amount = ($row['installment_amount'] !== null) ? number_format(floatval($row['installment_amount']), 2, '.', '') : '0.00';
+
+        if ($row['receipt_id'] !== null) {
+            $installment_counter++;
+            $inst_text = ($row['plan_type'] === 'installment') ? get_ordinal($installment_counter) : 'Full Payment';
+        } else {
+            $inst_text = 'N/A';
+        }
 
         if ($is_repeated) {
             // Write row with empty non-payment fields
@@ -123,6 +150,7 @@ try {
                 $safe_receipt,
                 $payment_date,
                 $installment_amount,
+                $inst_text,
                 '', // Certificate of Completion
                 '', // English Course Certificate
                 ''  // All Exam Records
@@ -175,6 +203,7 @@ try {
                 $safe_receipt,
                 $payment_date,
                 $installment_amount,
+                $inst_text,
                 $cert_completion_text,
                 $english_cert_text,
                 $row['exam_records']
