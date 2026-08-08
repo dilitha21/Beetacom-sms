@@ -21,7 +21,15 @@ if (isset($_SESSION['user_id'])) {
 
 // Clear remember_me cookie
 if (isset($_COOKIE['remember_me'])) {
-    setcookie('remember_me', '', time() - 3600, '/');
+    $is_secure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') 
+                 || (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+    setcookie('remember_me', '', [
+        'expires' => time() - 3600,
+        'path' => '/',
+        'httponly' => true,
+        'samesite' => 'Lax',
+        'secure' => $is_secure
+    ]);
 }
 
 // Clear all session variables

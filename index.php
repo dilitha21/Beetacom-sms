@@ -33,6 +33,7 @@ if (isset($_COOKIE['remember_me'])) {
                 $_SESSION['user_id']  = $user['user_id'];
                 $_SESSION['username'] = $user['username'];
                 $_SESSION['role']     = $user['role'];
+                $_SESSION['login_time'] = time();
 
                 // Rotate remember token for security
                 $new_token = bin2hex(random_bytes(32));
@@ -41,6 +42,9 @@ if (isset($_COOKIE['remember_me'])) {
                 $update_stmt = $pdo->prepare('UPDATE users SET remember_token = ? WHERE user_id = ?');
                 $update_stmt->execute([$new_hash, $user['user_id']]);
 
+                $is_secure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') 
+                             || (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+
                 setcookie(
                     'remember_me',
                     $user['user_id'] . ':' . $new_token,
@@ -48,7 +52,8 @@ if (isset($_COOKIE['remember_me'])) {
                         'expires' => time() + (30 * 24 * 60 * 60), // 30 days
                         'path' => '/',
                         'httponly' => true,
-                        'samesite' => 'Lax'
+                        'samesite' => 'Lax',
+                        'secure' => $is_secure
                     ]
                 );
 
@@ -87,6 +92,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $_SESSION['user_id']  = $user['user_id'];
                     $_SESSION['username'] = $user['username'];
                     $_SESSION['role']     = $user['role'];
+                    $_SESSION['login_time'] = time();
 
                     // Process Remember Me
                     if (isset($_POST['remember_me'])) {
@@ -96,6 +102,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $update_stmt = $pdo->prepare('UPDATE users SET remember_token = ? WHERE user_id = ?');
                         $update_stmt->execute([$token_hash, $user['user_id']]);
 
+                        $is_secure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') 
+                                     || (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+
                         setcookie(
                             'remember_me',
                             $user['user_id'] . ':' . $token,
@@ -103,7 +112,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 'expires' => time() + (30 * 24 * 60 * 60), // 30 days
                                 'path' => '/',
                                 'httponly' => true,
-                                'samesite' => 'Lax'
+                                'samesite' => 'Lax',
+                                'secure' => $is_secure
                             ]
                         );
                     }

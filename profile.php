@@ -171,6 +171,49 @@ include 'header.php';
                     </div>
                 <?php endif; ?>
 
+                <!-- User Profile Details Card -->
+                <div class="profile-card mb-4">
+                    <div class="card-header-custom d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-1 fw-bold"><i class="bi bi-person-circle me-2 text-primary"></i>My Profile Details</h4>
+                            <p class="text-muted mb-0 small">Overview of your current login session.</p>
+                        </div>
+                        <span class="badge bg-primary px-3 py-2 fs-7 rounded-pill text-uppercase">
+                            <?php echo htmlspecialchars($_SESSION['role']); ?>
+                        </span>
+                    </div>
+                    <div class="p-4" style="background-color: var(--bg-surface);">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="p-3 border border-secondary border-opacity-10 rounded" style="background-color: var(--bg-main);">
+                                    <div class="text-secondary small mb-1"><i class="bi bi-person me-1"></i>Logged in as</div>
+                                    <div class="fw-bold text-dark fs-5"><?php echo htmlspecialchars($_SESSION['username']); ?></div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="p-3 border border-secondary border-opacity-10 rounded" style="background-color: var(--bg-main);">
+                                    <div class="text-secondary small mb-1"><i class="bi bi-shield-fill-check me-1"></i>Access Level</div>
+                                    <div class="fw-bold text-dark fs-5">
+                                        <?php echo ($_SESSION['role'] === 'super_admin') ? 'Super Administrator' : 'Staff Member'; ?>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="p-3 border border-secondary border-opacity-10 rounded" style="background-color: var(--bg-main);">
+                                    <div class="text-secondary small mb-1"><i class="bi bi-clock me-1"></i>Session Started</div>
+                                    <div class="fw-semibold text-dark"><?php echo date('Y-m-d H:i:s', $_SESSION['login_time'] ?? time()); ?></div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="p-3 border border-secondary border-opacity-10 rounded" style="background-color: var(--bg-main);">
+                                    <div class="text-secondary small mb-1"><i class="bi bi-pc-display me-1"></i>IP Address</div>
+                                    <div class="fw-semibold text-dark"><?php echo htmlspecialchars($_SERVER['REMOTE_ADDR'] ?? 'Unknown'); ?></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Card 1: Update Account Details -->
                 <div class="profile-card mb-4">
                     <div class="card-header-custom">

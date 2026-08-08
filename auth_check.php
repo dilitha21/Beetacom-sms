@@ -27,6 +27,7 @@ if (!isset($_SESSION['user_id'])) {
                     $_SESSION['user_id']  = $user['user_id'];
                     $_SESSION['username'] = $user['username'];
                     $_SESSION['role']     = $user['role'];
+                    $_SESSION['login_time'] = time();
 
                     // Rotate the remember token for security
                     $new_token = bin2hex(random_bytes(32));
@@ -35,6 +36,9 @@ if (!isset($_SESSION['user_id'])) {
                     $update_stmt = $pdo->prepare('UPDATE users SET remember_token = ? WHERE user_id = ?');
                     $update_stmt->execute([$new_hash, $user['user_id']]);
 
+                    $is_secure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') 
+                                 || (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+
                     setcookie(
                         'remember_me',
                         $user['user_id'] . ':' . $new_token,
@@ -42,7 +46,8 @@ if (!isset($_SESSION['user_id'])) {
                             'expires' => time() + (30 * 24 * 60 * 60), // 30 days
                             'path' => '/',
                             'httponly' => true,
-                            'samesite' => 'Lax'
+                            'samesite' => 'Lax',
+                            'secure' => $is_secure
                         ]
                     );
 
