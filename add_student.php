@@ -736,6 +736,7 @@ include 'header.php';
                 if (!form.checkValidity()) {
                     event.preventDefault();
                     event.stopPropagation();
+                    alert('Please fill out all required fields correctly before submitting.');
                 }
                 form.classList.add('was-validated');
             }, false);
