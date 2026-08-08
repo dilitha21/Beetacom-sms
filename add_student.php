@@ -703,16 +703,6 @@ include 'header.php';
                 }, 10);
             });
 
-            // Form validation highlight trigger
-            const form = document.getElementById('studentForm');
-            form.addEventListener('submit', function(event) {
-                if (!form.checkValidity()) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    alert('Please fill out all required fields correctly before submitting.');
-                }
-                form.classList.add('was-validated');
-            }, false);
         });
     </script>
 
