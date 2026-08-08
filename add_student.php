@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $batch_number       = trim($_POST['batch_number'] ?? '');
         $is_nvq             = trim($_POST['is_nvq'] ?? '');
         $sequence_number    = trim($_POST['sequence_number'] ?? '');
-        $is_historical      = isset($_POST['is_historical']) ? 1 : 0;
+        $is_historical      = 0; // Historical records are no longer created
         $registration_date  = trim($_POST['registration_date'] ?? '');
         $name               = trim($_POST['name'] ?? '');
         $address            = trim($_POST['address'] ?? '');
@@ -68,8 +68,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $beetaa_kids        = isset($_POST['beetaa_kids']) ? 1 : 0;
         $other_course       = isset($_POST['other_course']) ? 1 : 0;
 
-        // Default registration date to today if not historical (for backend fallback security)
-        if (!$is_historical) {
+        // Default registration date to today if empty
+        if (empty($registration_date)) {
             $registration_date = date('Y-m-d');
         }
 
@@ -364,28 +364,20 @@ include 'header.php';
                                 <p class="text-muted mb-0 small">Enter student academic and personal profiles below</p>
                             </div>
                             
-                            <!-- Toggle & Date Container -->
-                            <div class="d-flex align-items-center gap-3">
-                                <!-- Registration Date -->
-                                <div class="d-flex align-items-center gap-2 px-3 py-2 rounded-3" style="background-color: var(--bg-main); border: 1px solid var(--border-color);">
-                                    <label for="registration_date" class="form-label required mb-0 small fw-bold text-dark" style="white-space: nowrap;">Reg. Date:</label>
-                                    <input type="date" class="form-control form-control-sm border-0 bg-transparent p-0 text-dark" id="registration_date" name="registration_date" required value="<?php echo isset($_POST['registration_date']) ? htmlspecialchars($_POST['registration_date']) : ''; ?>" style="box-shadow: none; outline: none; width: 130px;">
-                                </div>
-                                
-                                <!-- Historical Record Toggle -->
-                                <div class="form-check form-switch px-4 py-2 rounded-3 d-flex align-items-center gap-2 mb-0" style="background-color: var(--bg-main); border: 1px solid var(--border-color);">
-                                    <input class="form-check-input ms-0" type="checkbox" id="is_historical" name="is_historical_check" <?php echo (isset($_POST['is_historical_check']) || (isset($_POST['is_historical']) && $_POST['is_historical'] == 1)) ? 'checked' : ''; ?>>
-                                    <label class="form-check-label" for="is_historical">Historical Paper Record</label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="card-body p-4 p-md-5">
-                            
-                            <!-- Hidden Fields -->
-                            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
-                            <!-- Mirror historical status for POST -->
-                            <input type="hidden" name="is_historical" id="is_historical_hidden" value="<?php echo (isset($_POST['is_historical_check']) || (isset($_POST['is_historical']) && $_POST['is_historical'] == 1)) ? '1' : '0'; ?>">
+                             <!-- Date Container -->
+                             <div>
+                                 <!-- Registration Date -->
+                                 <div class="d-flex align-items-center gap-2 px-3 py-2 rounded-3" style="background-color: var(--bg-main); border: 1px solid var(--border-color);">
+                                     <label for="registration_date" class="form-label required mb-0 small fw-bold text-dark" style="white-space: nowrap;">Reg. Date:</label>
+                                     <input type="date" class="form-control form-control-sm border-0 bg-transparent p-0 text-dark" id="registration_date" name="registration_date" required value="<?php echo isset($_POST['registration_date']) ? htmlspecialchars($_POST['registration_date']) : ''; ?>" style="box-shadow: none; outline: none; width: 130px;">
+                                 </div>
+                             </div>
+                         </div>
+ 
+                         <div class="card-body p-4 p-md-5">
+                             
+                             <!-- Hidden Fields -->
+                             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
 
                             <!-- SECTION 1: REGISTRATION DETAILS -->
                             <div class="form-section-title">
@@ -625,8 +617,6 @@ include 'header.php';
     <!-- Vanilla Javascript Logic -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const isHistoricalCheckbox = document.getElementById('is_historical');
-            const isHistoricalHiddenInput = document.getElementById('is_historical_hidden');
             const registrationDateInput = document.getElementById('registration_date');
             
             // Function to set registration date to today's date (local timezone)
@@ -638,26 +628,10 @@ include 'header.php';
                 registrationDateInput.value = `${year}-${month}-${day}`;
             };
 
-            // Setup state based on the checkbox status
-            const updateDatePickerState = () => {
-                if (isHistoricalCheckbox.checked) {
-                    registrationDateInput.removeAttribute('readonly');
-                    isHistoricalHiddenInput.value = '1';
-                } else {
-                    registrationDateInput.setAttribute('readonly', true);
-                    isHistoricalHiddenInput.value = '0';
-                    setRegistrationDateToToday();
-                }
-            };
-
             // Initialize on page load (keep user input if form submitted with errors, otherwise default to today)
             if (!registrationDateInput.value) {
                 setRegistrationDateToToday();
             }
-            updateDatePickerState();
-
-            // Handle toggle changes
-            isHistoricalCheckbox.addEventListener('change', updateDatePickerState);
 
             // Elements for Index Number Builder
             const courseCodeSelect = document.getElementById('course_code');
@@ -724,8 +698,7 @@ include 'header.php';
             document.getElementById('resetBtn').addEventListener('click', function(e) {
                 // Let native reset run first, then apply delay to reset dates properly
                 setTimeout(() => {
-                    isHistoricalCheckbox.checked = false;
-                    updateDatePickerState();
+                    setRegistrationDateToToday();
                     handleCourseCodeChange();
                 }, 10);
             });

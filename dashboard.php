@@ -261,7 +261,6 @@ include 'header.php';
                                 <th>NIC Number</th>
                                 <th>Contact Number</th>
                                 <th>Registration Date</th>
-                                <th>Record Type</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -285,13 +284,6 @@ include 'header.php';
                                     </td>
                                     <td class="text-dark">
                                         <i class="bi bi-calendar3 me-1 small text-dark"></i><?php echo htmlspecialchars($student['registration_date']); ?>
-                                    </td>
-                                    <td class="text-dark">
-                                        <?php if ($student['is_historical']): ?>
-                                            <i class="bi bi-file-earmark-lock-fill me-1 text-dark"></i>Historical
-                                        <?php else: ?>
-                                            <i class="bi bi-cloud-check-fill me-1 text-dark"></i>Active
-                                        <?php endif; ?>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
