@@ -20,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Collect & Sanitize textual/date inputs
         $course_code        = trim($_POST['course_code'] ?? '');
         $batch_year         = trim($_POST['batch_year'] ?? '');
-        $batch_number       = trim($_POST['batch_number'] ?? '');
+        $batch_number       = ''; // Batch number is no longer collected or used
         $is_nvq             = trim($_POST['is_nvq'] ?? '');
         $sequence_number    = trim($_POST['sequence_number'] ?? '');
         $is_historical      = 0; // Historical records are no longer created
@@ -35,12 +35,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $guardian_details   = trim($_POST['guardian_details'] ?? '');
         $added_by           = $_SESSION['user_id'] ?? null;
 
-        // Build index_number based on course_code
+        // Build index_number based on course_code (omitting batch number)
         if ($course_code === 'IN' || $course_code === 'KIDS') {
             $is_nvq = null;
-            $index_number = $course_code . '/' . $batch_year . '/' . $batch_number . '/' . $sequence_number;
+            $index_number = $course_code . '/' . $batch_year . '/' . $sequence_number;
         } else {
-            $index_number = $course_code . '/' . $batch_year . '/' . $batch_number . '/' . $is_nvq . '/' . $sequence_number;
+            $index_number = $course_code . '/' . $batch_year . '/' . $is_nvq . '/' . $sequence_number;
         }
 
         // Educational Qualifications (boolean checkboxes)
@@ -74,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         // Validation checks
-        if (empty($course_code) || empty($batch_year) || empty($batch_number) || empty($sequence_number) || 
+        if (empty($course_code) || empty($batch_year) || empty($sequence_number) || 
             ($course_code !== 'IN' && $course_code !== 'KIDS' && empty($is_nvq)) || 
             empty($registration_date) || empty($name) || empty($address) || 
             empty($contact_no) || empty($nic) || empty($dob) || empty($gender)) {
@@ -386,7 +386,7 @@ include 'header.php';
                             
                             <!-- Index Number Builder Grid -->
                             <div class="row g-3 mb-4">
-                                <div class="col-md-5">
+                                <div class="col-md-6">
                                     <label for="course_code" class="form-label required">Course Code</label>
                                     <select class="form-select" id="course_code" name="course_code" required>
                                         <option value="" disabled selected>Select Course</option>
@@ -398,13 +398,9 @@ include 'header.php';
                                         <option value="ICT" <?php echo (isset($_POST['course_code']) && $_POST['course_code'] === 'ICT') ? 'selected' : ''; ?>>ICT - ICT Technician (LV4)</option>
                                     </select>
                                 </div>
-                                <div class="col-md-1">
+                                <div class="col-md-2">
                                     <label for="batch_year" class="form-label required">Year</label>
                                     <input type="text" name="batch_year" id="batch_year" maxlength="2" pattern="\d{2}" placeholder="26" required class="form-control" value="<?php echo isset($_POST['batch_year']) ? htmlspecialchars($_POST['batch_year']) : ''; ?>">
-                                </div>
-                                <div class="col-md-2">
-                                    <label for="batch_number" class="form-label required">Batch</label>
-                                    <input type="text" name="batch_number" id="batch_number" maxlength="3" pattern="\d{3}" placeholder="004" required class="form-control" value="<?php echo isset($_POST['batch_number']) ? htmlspecialchars($_POST['batch_number']) : ''; ?>">
                                 </div>
                                 <div class="col-md-2" id="nvq_type_container">
                                     <label for="is_nvq" class="form-label required">Type</label>
@@ -636,7 +632,6 @@ include 'header.php';
             // Elements for Index Number Builder
             const courseCodeSelect = document.getElementById('course_code');
             const batchYearInput = document.getElementById('batch_year');
-            const batchNumberInput = document.getElementById('batch_number');
             const isNvqSelect = document.getElementById('is_nvq');
             const sequenceNumberInput = document.getElementById('sequence_number');
             const indexNumberInput = document.getElementById('index_number');
@@ -646,20 +641,19 @@ include 'header.php';
             const generateIndexNumber = () => {
                 const courseCode = courseCodeSelect.value || '';
                 const batchYear = batchYearInput.value || '';
-                const batchNumber = batchNumberInput.value || '';
                 const isNvq = isNvqSelect.value || '';
                 const sequenceNumber = sequenceNumberInput.value || '';
 
                 // If critical parameters are empty, leave preview blank
-                if (!courseCode || !batchYear || !batchNumber || !sequenceNumber || (courseCode !== 'IN' && courseCode !== 'KIDS' && !isNvq)) {
+                if (!courseCode || !batchYear || !sequenceNumber || (courseCode !== 'IN' && courseCode !== 'KIDS' && !isNvq)) {
                     indexNumberInput.value = '';
                     return;
                 }
 
                 if (courseCode === 'IN' || courseCode === 'KIDS') {
-                    indexNumberInput.value = `${courseCode}/${batchYear}/${batchNumber}/${sequenceNumber}`;
+                    indexNumberInput.value = `${courseCode}/${batchYear}/${sequenceNumber}`;
                 } else {
-                    indexNumberInput.value = `${courseCode}/${batchYear}/${batchNumber}/${isNvq}/${sequenceNumber}`;
+                    indexNumberInput.value = `${courseCode}/${batchYear}/${isNvq}/${sequenceNumber}`;
                 }
             };
 
@@ -682,7 +676,7 @@ include 'header.php';
             };
 
             // Listen to inputs
-            [courseCodeSelect, batchYearInput, batchNumberInput, isNvqSelect, sequenceNumberInput].forEach(elem => {
+            [courseCodeSelect, batchYearInput, isNvqSelect, sequenceNumberInput].forEach(elem => {
                 if (elem) {
                     elem.addEventListener('input', generateIndexNumber);
                     elem.addEventListener('change', generateIndexNumber);

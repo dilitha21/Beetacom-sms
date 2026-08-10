@@ -7,20 +7,18 @@ $error_msg = '';
 
 $course_code = trim($_GET['course_code'] ?? '');
 $batch_year = trim($_GET['batch_year'] ?? '');
-$batch_number = trim($_GET['batch_number'] ?? '');
 $exam_name = trim($_GET['exam_name'] ?? '');
 $exam_date = trim($_GET['exam_date'] ?? date('Y-m-d'));
 
 $students = [];
 
-// Load students matching the batch, course and batch number
-if ($course_code !== '' && $batch_year !== '' && $batch_number !== '') {
+// Load students matching the batch and course
+if ($course_code !== '' && $batch_year !== '') {
     try {
-        $stmt = $pdo->prepare("SELECT id, name, index_number FROM students WHERE course_code = :course_code AND batch_year = :batch_year AND batch_number = :batch_number ORDER BY index_number ASC");
+        $stmt = $pdo->prepare("SELECT id, name, index_number FROM students WHERE course_code = :course_code AND batch_year = :batch_year ORDER BY index_number ASC");
         $stmt->execute([
             ':course_code' => $course_code,
-            ':batch_year'  => $batch_year,
-            ':batch_number' => $batch_number
+            ':batch_year'  => $batch_year
         ]);
         $students = $stmt->fetchAll();
     } catch (\PDOException $e) {
@@ -69,7 +67,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             $students = [];
             $course_code = '';
             $batch_year = '';
-            $batch_number = '';
             $exam_name = '';
         } catch (\Exception $e) {
             $pdo->rollBack();
@@ -211,13 +208,9 @@ include 'header.php';
                                         <option value="ICT" <?php echo ($course_code === 'ICT') ? 'selected' : ''; ?>>ICT - ICT Technician (LV4)</option>
                                     </select>
                                 </div>
-                                <div class="col-md-1">
+                                <div class="col-md-2">
                                     <label for="batch_year" class="form-label required">Year</label>
                                     <input type="text" class="form-control w-100" id="batch_year" name="batch_year" maxlength="2" pattern="\d{2}" placeholder="26" required value="<?php echo htmlspecialchars($batch_year); ?>">
-                                </div>
-                                <div class="col-md-1">
-                                    <label for="batch_number" class="form-label required">Batch</label>
-                                    <input type="text" class="form-control w-100" id="batch_number" name="batch_number" maxlength="3" pattern="\d{3}" placeholder="004" required value="<?php echo htmlspecialchars($batch_number); ?>">
                                 </div>
                                 <div class="col-md-3">
                                     <label for="exam_name" class="form-label required">Exam Name</label>
@@ -236,14 +229,14 @@ include 'header.php';
                         </form>
                     </div>
                 </div>
-
+ 
                 <!-- Bulk Grading List Form -->
-                <?php if ($_SERVER['REQUEST_METHOD'] === 'GET' && $course_code !== '' && $batch_year !== '' && $batch_number !== ''): ?>
+                <?php if ($_SERVER['REQUEST_METHOD'] === 'GET' && $course_code !== '' && $batch_year !== ''): ?>
                     <div class="grading-card mt-4">
                         <div class="card-header-custom d-flex justify-content-between align-items-center flex-wrap gap-2">
                             <div>
                                 <h4 class="mb-1 fw-bold"><i class="bi bi-card-checklist me-2 text-primary"></i>2. Input Grades for Batch</h4>
-                                <p class="text-muted mb-0 small">Course: <strong><?php echo htmlspecialchars($course_code); ?></strong> | Batch Year: <strong>20<?php echo htmlspecialchars($batch_year); ?></strong> | Batch: <strong><?php echo htmlspecialchars($batch_number); ?></strong></p>
+                                <p class="text-muted mb-0 small">Course: <strong><?php echo htmlspecialchars($course_code); ?></strong> | Batch Year: <strong>20<?php echo htmlspecialchars($batch_year); ?></strong></p>
                             </div>
                             <span class="badge bg-primary px-3 py-2 rounded"><?php echo count($students); ?> Students Found</span>
                         </div>
@@ -262,7 +255,6 @@ include 'header.php';
                                     <!-- Pass filters as parameters to POST -->
                                     <input type="hidden" name="course_code" value="<?php echo htmlspecialchars($course_code); ?>">
                                     <input type="hidden" name="batch_year" value="<?php echo htmlspecialchars($batch_year); ?>">
-                                    <input type="hidden" name="batch_number" value="<?php echo htmlspecialchars($batch_number); ?>">
                                     <input type="hidden" name="exam_name" value="<?php echo htmlspecialchars($exam_name); ?>">
                                     <input type="hidden" name="exam_date" value="<?php echo htmlspecialchars($exam_date); ?>">
 
