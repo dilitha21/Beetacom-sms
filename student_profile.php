@@ -53,6 +53,8 @@ if ($success_param === 1) {
     $success_msg = "Student registered successfully";
 } elseif ($success_param === 7) {
     $success_msg = "Certificate status updated successfully.";
+} elseif ($success_param === 8) {
+    $success_msg = "Student registration info updated successfully.";
 }
 
 if ($error_param !== '') {
@@ -863,11 +865,14 @@ include 'header.php';
                                     <form action="student_profile.php?id=<?php echo $student_id; ?>" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to permanently delete this student profile? This will remove all payment details and transaction histories.');">
                                         <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
                                         <input type="hidden" name="action" value="delete_profile">
-                                        <button type="submit" class="btn btn-outline-danger">
+                                        <button type="submit" class="btn btn-outline-danger me-2">
                                             <i class="bi bi-trash-fill me-1"></i>Delete Student Profile
                                         </button>
                                     </form>
                                 <?php endif; ?>
+                                <a href="edit_student.php?id=<?php echo $student_id; ?>" class="btn btn-outline-primary">
+                                    <i class="bi bi-pencil-square me-1"></i>Update Registration Info
+                                </a>
                             </div>
                             <div class="d-flex gap-3">
                                 <a href="dashboard.php" class="btn btn-muted-outline">
