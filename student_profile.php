@@ -779,26 +779,24 @@ include 'header.php';
                                 <h4 class="mb-4 fw-bold"><i class="bi bi-journal-check me-2 text-primary"></i>Exam Records & Grades</h4>
 
                                 <!-- Certificate Issuance Status Form -->
-                                <form action="student_profile.php?id=<?php echo $student_id; ?>" method="POST" class="mb-4 p-3 border border-secondary border-opacity-10 rounded d-flex flex-wrap align-items-center justify-content-between gap-3" style="background: var(--bg-surface);">
+                                <form action="student_profile.php?id=<?php echo $student_id; ?>" method="POST" class="mb-4 p-3 border border-secondary border-opacity-10 rounded d-flex flex-wrap align-items-center gap-3" style="background: var(--bg-surface);">
                                     <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
                                     <input type="hidden" name="action" value="update_certificates">
                                     
-                                    <div class="d-flex flex-wrap align-items-center gap-3">
-                                        <h6 class="fw-bold mb-0 text-secondary me-2">
-                                            <i class="bi bi-patch-check me-1 text-primary"></i>Certificate Status:
-                                        </h6>
-                                        <div class="form-check mb-0">
-                                            <input class="form-check-input" type="checkbox" id="cert_completion_issued" name="cert_completion_issued" value="1" <?php echo ($student['cert_completion_issued'] == 1) ? 'checked' : ''; ?> style="cursor: pointer;">
-                                            <label class="form-check-label small fw-semibold text-dark" for="cert_completion_issued" style="cursor: pointer;">Certificate of Completion Issued</label>
-                                        </div>
-                                        <div class="form-check mb-0 ms-md-3">
-                                            <input class="form-check-input" type="checkbox" id="english_cert_issued" name="english_cert_issued" value="1" <?php echo ($student['english_cert_issued'] == 1) ? 'checked' : ''; ?> style="cursor: pointer;">
-                                            <label class="form-check-label small fw-semibold text-dark" for="english_cert_issued" style="cursor: pointer;">English Course Certificate Issued</label>
-                                        </div>
+                                    <h6 class="fw-bold mb-0 text-secondary">
+                                        <i class="bi bi-patch-check me-1 text-primary"></i>Certificates:
+                                    </h6>
+                                    <div class="form-check mb-0">
+                                        <input class="form-check-input" type="checkbox" id="cert_completion_issued" name="cert_completion_issued" value="1" <?php echo ($student['cert_completion_issued'] == 1) ? 'checked' : ''; ?> style="cursor: pointer;">
+                                        <label class="form-check-label small fw-semibold text-dark" for="cert_completion_issued" style="cursor: pointer;">Completion Cert</label>
+                                    </div>
+                                    <div class="form-check mb-0">
+                                        <input class="form-check-input" type="checkbox" id="english_cert_issued" name="english_cert_issued" value="1" <?php echo ($student['english_cert_issued'] == 1) ? 'checked' : ''; ?> style="cursor: pointer;">
+                                        <label class="form-check-label small fw-semibold text-dark" for="english_cert_issued" style="cursor: pointer;">English Cert</label>
                                     </div>
                                     
-                                    <button type="submit" class="btn btn-primary btn-sm px-3 py-1.5">
-                                        <i class="bi bi-save me-1"></i>Save Status
+                                    <button type="submit" class="btn btn-primary btn-sm px-3 py-1">
+                                        <i class="bi bi-save me-1"></i>Save
                                     </button>
                                 </form>
                                 
