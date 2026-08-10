@@ -859,27 +859,27 @@ include 'header.php';
                         </div>
 
                         <!-- Footer Actions -->
-                        <div class="profile-header border-top d-flex justify-content-between align-items-center flex-wrap gap-3">
-                            <div>
+                        <div class="profile-header border-top d-flex justify-content-between align-items-center flex-wrap gap-2 w-100">
+                            <div class="d-flex flex-wrap gap-2 align-items-center">
                                 <?php if ($_SESSION['role'] === 'super_admin'): ?>
                                     <form action="student_profile.php?id=<?php echo $student_id; ?>" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to permanently delete this student profile? This will remove all payment details and transaction histories.');">
                                         <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
                                         <input type="hidden" name="action" value="delete_profile">
-                                        <button type="submit" class="btn btn-outline-danger me-2">
-                                            <i class="bi bi-trash-fill me-1"></i>Delete Student Profile
+                                        <button type="submit" class="btn btn-outline-danger btn-sm">
+                                            <i class="bi bi-trash-fill me-1"></i>Delete Profile
                                         </button>
                                     </form>
                                 <?php endif; ?>
-                                <a href="edit_student.php?id=<?php echo $student_id; ?>" class="btn btn-outline-primary">
-                                    <i class="bi bi-pencil-square me-1"></i>Update Registration Info
+                                <a href="edit_student.php?id=<?php echo $student_id; ?>" class="btn btn-outline-primary btn-sm">
+                                    <i class="bi bi-pencil-square me-1"></i>Update Info
                                 </a>
                             </div>
-                            <div class="d-flex gap-3">
-                                <a href="dashboard.php" class="btn btn-muted-outline">
-                                    <i class="bi bi-speedometer2"></i> Return to Dashboard
+                            <div class="d-flex flex-wrap gap-2">
+                                <a href="dashboard.php" class="btn btn-muted-outline btn-sm">
+                                    <i class="bi bi-speedometer2 me-1"></i>Dashboard
                                 </a>
-                                <a href="add_student.php" class="btn btn-accent">
-                                    <i class="bi bi-person-plus"></i> Add New Student
+                                <a href="add_student.php" class="btn btn-accent btn-sm">
+                                    <i class="bi bi-person-plus me-1"></i>Add Student
                                 </a>
                             </div>
                         </div>

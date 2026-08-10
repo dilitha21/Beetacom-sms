@@ -237,7 +237,7 @@ $f_web_design = isset($_POST['csrf_token']) ? isset($_POST['web_design']) : ($st
 $f_beetaa_kids = isset($_POST['csrf_token']) ? isset($_POST['beetaa_kids']) : ($student['beetaa_kids'] ?? 0);
 $f_other_course = isset($_POST['csrf_token']) ? isset($_POST['other_course']) : ($student['other_course'] ?? 0);
 
-$page_title = 'Update Student - Student Registration System';
+$page_title = 'Update Student Info - Student Registration System';
 ob_start();
 ?>
     <style>
@@ -271,88 +271,118 @@ ob_start();
         .form-label {
             font-size: 0.85rem;
             font-weight: 500;
-            color: var(--text-muted);
+            color: var(--text-secondary);
             margin-bottom: 0.4rem;
         }
 
         .form-label.required::after {
-            content: " *";
-            color: var(--accent-red);
+            content: ' *';
+            color: #ef4444;
         }
 
         .form-control, .form-select {
-            padding: 0.6rem 0.9rem;
-            font-size: 0.9rem;
-            border-radius: 6px;
+            background-color: var(--bg-main);
             border: 1px solid var(--border-color);
-            background-color: var(--bg-surface);
-            color: var(--text-main);
-            transition: all 0.25s ease-in-out;
+            color: var(--text-primary);
+            border-radius: 8px;
+            padding: 0.6rem 0.85rem;
+            transition: all 0.2s ease;
         }
 
         .form-control:focus, .form-select:focus {
-            outline: none;
+            background-color: var(--bg-surface);
             border-color: var(--accent-color);
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
-            background-color: var(--bg-surface);
-            color: var(--text-main);
+            color: var(--text-primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+            outline: none;
         }
 
-        .form-control::placeholder {
-            color: #94a3b8;
-            opacity: 0.8;
+        .form-control[readonly] {
+            background-color: var(--bg-sidebar);
+            color: var(--text-secondary) !important;
+            border-color: var(--border-color);
+            cursor: not-allowed;
+            opacity: 0.6;
         }
 
-        /* Customize checkboxes styles */
         .form-check-input {
-            width: 1.15em;
-            height: 1.15em;
+            background-color: #ffffff;
+            border: 2px solid #94a3b8;
+            width: 1.25em;
+            height: 1.25em;
             margin-top: 0.15em;
-            background-color: var(--bg-surface);
-            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.2s ease;
         }
-
+        .form-check-input:hover {
+            border-color: var(--accent-color);
+        }
         .form-check-input:checked {
             background-color: var(--accent-color);
             border-color: var(--accent-color);
+            box-shadow: 0 0 8px rgba(99, 102, 241, 0.4);
         }
-
+        .form-check-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
         .form-check-label {
-            font-size: 0.88rem;
-            color: var(--text-main);
-            user-select: none;
+            font-size: 0.9rem;
+            color: var(--text-primary);
             cursor: pointer;
         }
 
-        .btn-accent {
-            background-color: var(--accent-color);
-            color: #ffffff;
-            border: none;
-            padding: 0.65rem 1.5rem;
-            font-weight: 500;
-            border-radius: 6px;
-            transition: all 0.2s ease;
+        /* Customize buttons */
+        .btn-submit {
+            background-color: var(--accent-color) !important;
+            color: #ffffff !important;
+            border: none !important;
+            border-radius: 8px !important;
+            padding: 0.75rem 2rem !important;
+            font-weight: bold !important;
+            cursor: pointer !important;
+            transition: background-color 0.2s ease !important;
+        }
+        .btn-submit:hover {
+            background-color: #4f46e5 !important;
+            color: #ffffff !important;
         }
 
-        .btn-accent:hover {
-            background-color: var(--accent-color-hover);
-            color: #ffffff;
-            transform: translateY(-1px);
+        .btn-reset {
+            background-color: var(--bg-surface) !important;
+            border: 1px solid var(--border-color) !important;
+            color: var(--text-primary) !important;
+            font-weight: 500 !important;
+            padding: 0.75rem 2rem !important;
+            border-radius: 8px !important;
+            transition: all 0.2s ease !important;
+        }
+        .btn-reset:hover {
+            background-color: var(--bg-sidebar) !important;
+            color: var(--text-primary) !important;
         }
 
-        .btn-muted-outline {
+        /* Course category wrapper cards */
+        .category-box {
+            background-color: var(--bg-main);
             border: 1px solid var(--border-color);
-            background-color: transparent;
-            color: var(--text-muted);
-            padding: 0.65rem 1.5rem;
-            font-weight: 500;
-            border-radius: 6px;
-            transition: all 0.2s ease;
+            border-radius: 8px;
+            padding: 1.25rem;
+            height: 100%;
         }
 
-        .btn-muted-outline:hover {
-            background-color: rgba(0, 0, 0, 0.02);
-            color: var(--text-main);
+        /* Alert stylings */
+        .alert-custom-success {
+            background-color: #d1fae5;
+            border: 1px solid rgba(16, 185, 129, 0.25);
+            color: #10b981;
+            border-radius: 8px;
+        }
+        .alert-custom-error {
+            background-color: #fee2e2;
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            color: #ef4444;
+            border-radius: 8px;
         }
     </style>
 <?php
@@ -360,274 +390,278 @@ $extra_css = ob_get_clean();
 include 'header.php';
 ?>
 
-    <div class="container py-4">
-        <!-- Back Navigation link -->
-        <div class="mb-3">
-            <a href="student_profile.php?id=<?php echo $student_id; ?>" class="text-decoration-none text-muted small">
-                <i class="bi bi-arrow-left me-1"></i>Back to Student Profile
-            </a>
-        </div>
+    <!-- Main Container -->
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-xl-10">
 
-        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
-            <h2 class="mb-0 fw-bold text-dark"><i class="bi bi-pencil-square me-2 text-primary"></i>Update Student Registration Info</h2>
-        </div>
+                <!-- Back Navigation link -->
+                <div class="mb-3 mt-4">
+                    <a href="student_profile.php?id=<?php echo $student_id; ?>" class="text-decoration-none text-muted small">
+                        <i class="bi bi-arrow-left me-1"></i>Back to Student Profile
+                    </a>
+                </div>
 
-        <?php if ($error_msg !== ''): ?>
-            <div class="mb-4">
-                <?php echo $error_msg; ?>
-            </div>
-        <?php endif; ?>
+                <!-- Alert Messages -->
+                <div id="alert-container">
+                    <?php if (!empty($error_msg)): ?>
+                        <?php if (strpos($error_msg, 'alert-danger') !== false): ?>
+                            <?php echo $error_msg; ?>
+                        <?php else: ?>
+                            <div class="alert alert-custom-error d-flex align-items-center mb-4" role="alert">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                <div><?php echo htmlspecialchars($error_msg); ?></div>
+                            </div>
+                        <?php endif; ?>
+                    <?php endif; ?>
+                </div>
 
-        <div class="form-card">
-            <div class="card-header-custom">
-                <h5 class="mb-1 fw-bold text-dark">Registration Form</h5>
-                <p class="text-muted mb-0 small">Update the registration details, educational qualifications, or courses for <strong><?php echo htmlspecialchars($f_name); ?></strong>.</p>
-            </div>
-            <div class="p-4 p-md-5">
-                <form action="edit_student.php?id=<?php echo $student_id; ?>" method="POST" id="studentForm" class="needs-validation" novalidate>
-                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
-
-                    <!-- SECTION 1: REGISTRATION DETAILS -->
-                    <div class="form-section-title">
-                        <i class="bi bi-file-earmark-text"></i> Registration Information
-                    </div>
-                    
-                    <!-- Index Number Builder Grid -->
-                    <div class="row g-3 mb-4">
-                        <div class="col-md-6">
-                            <label for="course_code" class="form-label required">Course Code</label>
-                            <select class="form-select" id="course_code" name="course_code" required>
-                                <option value="" disabled>Select Course</option>
-                                <option value="IN" <?php echo ($f_course_code === 'IN') ? 'selected' : ''; ?>>IN - Individual</option>
-                                <option value="KIDS" <?php echo ($f_course_code === 'KIDS') ? 'selected' : ''; ?>>KIDS - KIDS Course</option>
-                                <option value="AP" <?php echo ($f_course_code === 'AP') ? 'selected' : ''; ?>>AP - Computer Application Assistant (LV3)</option>
-                                <option value="CGD" <?php echo ($f_course_code === 'CGD') ? 'selected' : ''; ?>>CGD - Computer Graphic Designer</option>
-                                <option value="PRE" <?php echo ($f_course_code === 'PRE') ? 'selected' : ''; ?>>PRE - Pre School Teacher Training</option>
-                                <option value="ICT" <?php echo ($f_course_code === 'ICT') ? 'selected' : ''; ?>>ICT - ICT Technician (LV4)</option>
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <label for="batch_year" class="form-label required">Year</label>
-                            <input type="text" name="batch_year" id="batch_year" maxlength="2" pattern="\d{2}" placeholder="26" required class="form-control" value="<?php echo $f_batch_year; ?>">
-                        </div>
-                        <div class="col-md-2" id="nvq_type_container">
-                            <label for="is_nvq" class="form-label required">Type</label>
-                            <select class="form-select" id="is_nvq" name="is_nvq" required>
-                                <option value="" disabled <?php echo ($f_is_nvq === '') ? 'selected' : ''; ?>>Type</option>
-                                <option value="N" <?php echo ($f_is_nvq === 'N') ? 'selected' : ''; ?>>N (NVQ)</option>
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <label for="sequence_number" class="form-label required">Index No</label>
-                            <input type="number" class="form-control" id="sequence_number" name="sequence_number" required placeholder="3782" min="1" value="<?php echo $f_sequence_number; ?>">
-                        </div>
-                    </div>
-
-                    <!-- Generated Index Number Preview -->
-                    <div class="row g-3 mb-4">
-                        <div class="col-md-6">
-                            <label for="index_number" class="form-label fw-bold">Generated Index Number Preview</label>
-                            <input type="text" class="form-control fw-bold text-primary" id="index_number" name="index_number" readonly placeholder="Fill inputs to generate..." value="<?php echo htmlspecialchars($student['index_number']); ?>">
-                        </div>
-                        <div class="col-md-6">
-                            <label for="registration_date" class="form-label required">Registration Date</label>
-                            <input type="date" name="registration_date" id="registration_date" required class="form-control" value="<?php echo $f_registration_date; ?>">
-                        </div>
-                    </div>
-
-                    <!-- SECTION 2: PERSONAL DETAILS -->
-                    <div class="form-section-title">
-                        <i class="bi bi-person-badge"></i> Personal Details
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-6 mb-3">
-                            <label for="name" class="form-label required">Full Name</label>
-                            <input type="text" name="name" id="name" required placeholder="Enter student's full name" class="form-control" value="<?php echo $f_name; ?>">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="address" class="form-label required">Address</label>
-                            <input type="text" name="address" id="address" required placeholder="Home / Mailing Address" class="form-control" value="<?php echo $f_address; ?>">
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-4 mb-3">
-                            <label for="contact_no" class="form-label required">Contact Number</label>
-                            <input type="text" name="contact_no" id="contact_no" required placeholder="10-digit Mobile (e.g. 0771234567)" maxlength="10" pattern="\d{10}" class="form-control" value="<?php echo $f_contact_no; ?>">
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="nic" class="form-label required">NIC (National ID)</label>
-                            <input type="text" name="nic" id="nic" required placeholder="12-digit NIC" maxlength="12" pattern="\d{12}" class="form-control" value="<?php echo $f_nic; ?>">
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="dob" class="form-label required">Date of Birth</label>
-                            <input type="date" name="dob" id="dob" required class="form-control" value="<?php echo $f_dob; ?>">
-                        </div>
-                    </div>
-                    <div class="row mb-4">
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label required">Gender</label>
-                            <div class="d-flex gap-4 mt-2">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="gender" id="gender_male" value="Male" required <?php echo ($f_gender === 'Male') ? 'checked' : ''; ?>>
-                                    <label class="form-check-label" for="gender_male">Male</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="gender" id="gender_female" value="Female" required <?php echo ($f_gender === 'Female') ? 'checked' : ''; ?>>
-                                    <label class="form-check-label" for="gender_female">Female</label>
+                <!-- Update Card -->
+                <div class="form-card">
+                    <form action="edit_student.php?id=<?php echo $student_id; ?>" method="POST" id="studentForm" class="needs-validation" novalidate>
+                        <div class="card-header-custom d-flex justify-content-between align-items-center flex-wrap gap-3">
+                            <div>
+                                <h4 class="mb-1 fw-bold"><i class="bi bi-pencil-square me-2 text-primary"></i>Update Registration Info</h4>
+                                <p class="text-muted mb-0 small">Update academic and personal profile details below</p>
+                            </div>
+                            
+                            <!-- Date Container -->
+                            <div>
+                                <div class="d-flex align-items-center gap-2 px-3 py-2 rounded-3" style="background-color: var(--bg-main); border: 1px solid var(--border-color);">
+                                    <label for="registration_date" class="form-label required mb-0 small fw-bold text-dark" style="white-space: nowrap;">Reg. Date:</label>
+                                    <input type="date" class="form-control form-control-sm border-0 bg-transparent p-0 text-dark" id="registration_date" name="registration_date" required value="<?php echo $f_registration_date; ?>" style="box-shadow: none; outline: none; width: 130px;">
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="guardian_name" class="form-label">Guardian Name (Optional)</label>
-                            <input type="text" name="guardian_name" id="guardian_name" placeholder="Parent / Guardian Name" class="form-control" value="<?php echo $f_guardian_name; ?>">
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="guardian_details" class="form-label">Guardian Details (Optional)</label>
-                            <input type="text" name="guardian_details" id="guardian_details" placeholder="Guardian Phone / Contact" class="form-control" value="<?php echo $f_guardian_details; ?>">
-                        </div>
-                    </div>
 
-                    <!-- SECTION 3: EDUCATIONAL QUALIFICATIONS -->
-                    <div class="form-section-title">
-                        <i class="bi bi-mortarboard"></i> Educational Qualifications
-                    </div>
-                    <div class="row g-3 mb-4">
-                        <div class="col-md-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="gce_ol" id="gce_ol" value="1" <?php echo $f_gce_ol ? 'checked' : ''; ?>>
-                                <label class="form-check-label" for="gce_ol">G.C.E. O/L</label>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="gce_al_science" id="gce_al_science" value="1" <?php echo $f_gce_al_science ? 'checked' : ''; ?>>
-                                <label class="form-check-label" for="gce_al_science">G.C.E. A/L - Science</label>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="gce_al_maths" id="gce_al_maths" value="1" <?php echo $f_gce_al_maths ? 'checked' : ''; ?>>
-                                <label class="form-check-label" for="gce_al_maths">G.C.E. A/L - Mathematics</label>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="gce_al_commerce" id="gce_al_commerce" value="1" <?php echo $f_gce_al_commerce ? 'checked' : ''; ?>>
-                                <label class="form-check-label" for="gce_al_commerce">G.C.E. A/L - Commerce</label>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="gce_al_art" id="gce_al_art" value="1" <?php echo $f_gce_al_art ? 'checked' : ''; ?>>
-                                <label class="form-check-label" for="gce_al_art">G.C.E. A/L - Arts</label>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="gce_al_tech" id="gce_al_tech" value="1" <?php echo $f_gce_al_tech ? 'checked' : ''; ?>>
-                                <label class="form-check-label" for="gce_al_tech">G.C.E. A/L - Technology</label>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="kids_grade" id="kids_grade" value="1" <?php echo $f_kids_grade ? 'checked' : ''; ?>>
-                                <label class="form-check-label" for="kids_grade">Kids School Grade</label>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="other_edu" id="other_edu" value="1" <?php echo $f_other_edu ? 'checked' : ''; ?>>
-                                <label class="form-check-label" for="other_edu">Other Qualifications</label>
-                            </div>
-                        </div>
-                    </div>
+                        <div class="card-body p-4 p-md-5">
+                            
+                            <!-- Hidden Fields -->
+                            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
 
-                    <!-- SECTION 4: NVQ COURSES -->
-                    <div class="form-section-title">
-                        <i class="bi bi-award"></i> NVQ Course Enrolments
-                    </div>
-                    <div class="row g-3 mb-4">
-                        <div class="col-md-6 col-lg-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="ict_tech" id="ict_tech" value="1" <?php echo $f_ict_tech ? 'checked' : ''; ?>>
-                                <label class="form-check-label" for="ict_tech">ICT Technician (NVQ)</label>
+                            <!-- SECTION 1: REGISTRATION DETAILS -->
+                            <div class="form-section-title">
+                                <i class="bi bi-file-earmark-text"></i> Registration Information
                             </div>
-                        </div>
-                        <div class="col-md-6 col-lg-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="computer_app_ast" id="computer_app_ast" value="1" <?php echo $f_computer_app_ast ? 'checked' : ''; ?>>
-                                <label class="form-check-label" for="computer_app_ast">Computer Application Assistant (NVQ)</label>
+                            
+                            <!-- Index Number Builder Grid -->
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-6">
+                                    <label for="course_code" class="form-label required">Course Code</label>
+                                    <select class="form-select" id="course_code" name="course_code" required>
+                                        <option value="" disabled>Select Course</option>
+                                        <option value="IN" <?php echo ($f_course_code === 'IN') ? 'selected' : ''; ?>>IN - Individual</option>
+                                        <option value="KIDS" <?php echo ($f_course_code === 'KIDS') ? 'selected' : ''; ?>>KIDS - KIDS Course</option>
+                                        <option value="AP" <?php echo ($f_course_code === 'AP') ? 'selected' : ''; ?>>AP - Computer Application Assistant (LV3)</option>
+                                        <option value="CGD" <?php echo ($f_course_code === 'CGD') ? 'selected' : ''; ?>>CGD - Computer Graphic Designer</option>
+                                        <option value="PRE" <?php echo ($f_course_code === 'PRE') ? 'selected' : ''; ?>>PRE - Pre School Teacher Training</option>
+                                        <option value="ICT" <?php echo ($f_course_code === 'ICT') ? 'selected' : ''; ?>>ICT - ICT Technician (LV4)</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <label for="batch_year" class="form-label required">Year</label>
+                                    <input type="text" name="batch_year" id="batch_year" maxlength="2" pattern="\d{2}" placeholder="26" required class="form-control" value="<?php echo $f_batch_year; ?>">
+                                </div>
+                                <div class="col-md-2" id="nvq_type_container">
+                                    <label for="is_nvq" class="form-label required">Type</label>
+                                    <select class="form-select" id="is_nvq" name="is_nvq" required>
+                                        <option value="" disabled <?php echo ($f_is_nvq === '') ? 'selected' : ''; ?>>Type</option>
+                                        <option value="N" <?php echo ($f_is_nvq === 'N') ? 'selected' : ''; ?>>N (NVQ)</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <label for="sequence_number" class="form-label required">Index No</label>
+                                    <input type="number" class="form-control" id="sequence_number" name="sequence_number" required placeholder="3782" min="1" value="<?php echo $f_sequence_number; ?>">
+                                </div>
                             </div>
-                        </div>
-                        <div class="col-md-6 col-lg-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="graphic_designer" id="graphic_designer" value="1" <?php echo $f_graphic_designer ? 'checked' : ''; ?>>
-                                <label class="form-check-label" for="graphic_designer">Graphic Designer (NVQ)</label>
-                            </div>
-                        </div>
-                        <div class="col-md-6 col-lg-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="pre_school" id="pre_school" value="1" <?php echo $f_pre_school ? 'checked' : ''; ?>>
-                                <label class="form-check-label" for="pre_school">Pre-School Teacher Training (NVQ)</label>
-                            </div>
-                        </div>
-                    </div>
 
-                    <!-- SECTION 5: NON-NVQ COURSES -->
-                    <div class="form-section-title">
-                        <i class="bi bi-book"></i> Non-NVQ Course Enrolments
-                    </div>
-                    <div class="row g-3 mb-5">
-                        <div class="col-md-6 col-lg-4 col-xl-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="non_nvq_app_ast" id="non_nvq_app_ast" value="1" <?php echo $f_non_nvq_app_ast ? 'checked' : ''; ?>>
-                                <label class="form-check-label" for="non_nvq_app_ast">App Assistant (Non-NVQ)</label>
+                            <!-- Generated Index Number Preview -->
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-6">
+                                    <label for="index_number" class="form-label fw-bold">Generated Index Number Preview</label>
+                                    <input type="text" class="form-control fw-bold text-primary" id="index_number" name="index_number" readonly placeholder="Fill inputs to generate..." value="<?php echo htmlspecialchars($student['index_number']); ?>">
+                                </div>
                             </div>
-                        </div>
-                        <div class="col-md-6 col-lg-4 col-xl-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="non_nvq_graphic" id="non_nvq_graphic" value="1" <?php echo $f_non_nvq_graphic ? 'checked' : ''; ?>>
-                                <label class="form-check-label" for="non_nvq_graphic">Graphic Design (Non-NVQ)</label>
-                            </div>
-                        </div>
-                        <div class="col-md-6 col-lg-4 col-xl-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="hr" id="hr" value="1" <?php echo $f_hr ? 'checked' : ''; ?>>
-                                <label class="form-check-label" for="hr">Human Resources Management</label>
-                            </div>
-                        </div>
-                        <div class="col-md-6 col-lg-4 col-xl-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="english" id="english" value="1" <?php echo $f_english ? 'checked' : ''; ?>>
-                                <label class="form-check-label" for="english">English Language Training</label>
-                            </div>
-                        </div>
-                        <div class="col-md-6 col-lg-4 col-xl-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="web_design" id="web_design" value="1" <?php echo $f_web_design ? 'checked' : ''; ?>>
-                                <label class="form-check-label" for="web_design">Web Designing</label>
-                            </div>
-                        </div>
-                        <div class="col-md-6 col-lg-4 col-xl-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="beetaa_kids" id="beetaa_kids" value="1" <?php echo $f_beetaa_kids ? 'checked' : ''; ?>>
-                                <label class="form-check-label" for="beetaa_kids">Beetaa Kids Course</label>
-                            </div>
-                        </div>
-                        <div class="col-md-6 col-lg-4 col-xl-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="other_course" id="other_course" value="1" <?php echo $f_other_course ? 'checked' : ''; ?>>
-                                <label class="form-check-label" for="other_course">Other Special Course</label>
-                            </div>
-                        </div>
-                    </div>
 
-                    <!-- Action Buttons -->
-                    <div class="border-top pt-4 d-flex justify-content-end gap-3">
-                        <a href="student_profile.php?id=<?php echo $student_id; ?>" class="btn btn-muted-outline">Cancel Changes</a>
-                        <button type="submit" class="btn btn-accent px-4">Update Student Info</button>
-                    </div>
-                </form>
+                            <!-- SECTION 2: PERSONAL DETAILS -->
+                            <div class="form-section-title">
+                                <i class="bi bi-person"></i> Personal Profile
+                            </div>
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-6">
+                                    <label for="name" class="form-label required">Full Name</label>
+                                    <input type="text" class="form-control" id="name" name="name" required placeholder="e.g. John Doe" value="<?php echo $f_name; ?>">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="nic" class="form-label required">NIC Number</label>
+                                    <input type="text" class="form-control" id="nic" name="nic" required placeholder="12-digit number" pattern="[0-9]{12}" maxlength="12" value="<?php echo $f_nic; ?>">
+                                    <div class="invalid-feedback">Must be exactly 12 digits.</div>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="contact_no" class="form-label required">Contact Number</label>
+                                    <input type="text" class="form-control" id="contact_no" name="contact_no" required placeholder="10-digit number" pattern="[0-9]{10}" maxlength="10" value="<?php echo $f_contact_no; ?>">
+                                    <div class="invalid-feedback">Must be exactly 10 digits.</div>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="dob" class="form-label required">Date of Birth</label>
+                                    <input type="date" class="form-control" id="dob" name="dob" required value="<?php echo $f_dob; ?>">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="gender" class="form-label required">Gender</label>
+                                    <select class="form-select" id="gender" name="gender" required>
+                                        <option value="" disabled>Select</option>
+                                        <option value="Male" <?php echo ($f_gender === 'Male') ? 'selected' : ''; ?>>Male</option>
+                                        <option value="Female" <?php echo ($f_gender === 'Female') ? 'selected' : ''; ?>>Female</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="address" class="form-label required">Home Address</label>
+                                    <input type="text" class="form-control" id="address" name="address" required placeholder="Full street address" value="<?php echo $f_address; ?>">
+                                </div>
+                            </div>
+
+                            <!-- SECTION 3: GUARDIAN DETAILS -->
+                            <div class="form-section-title">
+                                <i class="bi bi-people"></i> Guardian Details
+                            </div>
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-4">
+                                    <label for="guardian_name" class="form-label">Guardian Name</label>
+                                    <input type="text" class="form-control" id="guardian_name" name="guardian_name" placeholder="Name of parent/guardian" value="<?php echo $f_guardian_name; ?>">
+                                </div>
+                                <div class="col-md-8">
+                                    <label for="guardian_details" class="form-label">Guardian Contact Info / Details</label>
+                                    <input type="text" class="form-control" id="guardian_details" name="guardian_details" placeholder="Contact number, occupation, relationship, etc." value="<?php echo $f_guardian_details; ?>">
+                                </div>
+                            </div>
+
+                            <!-- SECTION 4: QUALIFICATIONS & COURSES -->
+                            <div class="form-section-title">
+                                <i class="bi bi-tags"></i> Qualifications & Courses
+                            </div>
+                            <div class="row g-3 mb-5">
+                                <!-- Educational Qualifications -->
+                                <div class="col-lg-4 col-md-6">
+                                    <div class="category-box">
+                                        <h6 class="fw-bold mb-3 text-secondary border-bottom border-secondary border-opacity-25 pb-2">
+                                            <i class="bi bi-book me-1 text-primary"></i>Education
+                                        </h6>
+                                        <div class="d-flex flex-column gap-2">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="gce_al_science" name="gce_al_science" <?php echo $f_gce_al_science ? 'checked' : ''; ?>>
+                                                <label class="form-check-label" for="gce_al_science">GCE A/L Science</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="gce_al_maths" name="gce_al_maths" <?php echo $f_gce_al_maths ? 'checked' : ''; ?>>
+                                                <label class="form-check-label" for="gce_al_maths">GCE A/L Maths</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="gce_al_commerce" name="gce_al_commerce" <?php echo $f_gce_al_commerce ? 'checked' : ''; ?>>
+                                                <label class="form-check-label" for="gce_al_commerce">GCE A/L Commerce</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="gce_al_art" name="gce_al_art" <?php echo $f_gce_al_art ? 'checked' : ''; ?>>
+                                                <label class="form-check-label" for="gce_al_art">GCE A/L Art</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="gce_al_tech" name="gce_al_tech" <?php echo $f_gce_al_tech ? 'checked' : ''; ?>>
+                                                <label class="form-check-label" for="gce_al_tech">GCE A/L Tech</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="gce_ol" name="gce_ol" <?php echo $f_gce_ol ? 'checked' : ''; ?>>
+                                                <label class="form-check-label" for="gce_ol">GCE O/L</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="kids_grade" name="kids_grade" <?php echo $f_kids_grade ? 'checked' : ''; ?>>
+                                                <label class="form-check-label" for="kids_grade">Kids Grade</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="other_edu" name="other_edu" <?php echo $f_other_edu ? 'checked' : ''; ?>>
+                                                <label class="form-check-label" for="other_edu">Other Education</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- NVQ Courses -->
+                                <div class="col-lg-4 col-md-6">
+                                    <div class="category-box">
+                                        <h6 class="fw-bold mb-3 text-secondary border-bottom border-secondary border-opacity-25 pb-2">
+                                            <i class="bi bi-award me-1 text-primary"></i>NVQ Courses
+                                        </h6>
+                                        <div class="d-flex flex-column gap-2">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="ict_tech" name="ict_tech" <?php echo $f_ict_tech ? 'checked' : ''; ?>>
+                                                <label class="form-check-label" for="ict_tech">ICT Technician</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="computer_app_ast" name="computer_app_ast" <?php echo $f_computer_app_ast ? 'checked' : ''; ?>>
+                                                <label class="form-check-label" for="computer_app_ast">Computer App. Assistant</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="graphic_designer" name="graphic_designer" <?php echo $f_graphic_designer ? 'checked' : ''; ?>>
+                                                <label class="form-check-label" for="graphic_designer">Graphic Designer</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="pre_school" name="pre_school" <?php echo $f_pre_school ? 'checked' : ''; ?>>
+                                                <label class="form-check-label" for="pre_school">Pre School</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Non NVQ Courses -->
+                                <div class="col-lg-4 col-md-12">
+                                    <div class="category-box">
+                                        <h6 class="fw-bold mb-3 text-secondary border-bottom border-secondary border-opacity-25 pb-2">
+                                            <i class="bi bi-box me-1 text-primary"></i>Non-NVQ Courses
+                                        </h6>
+                                        <div class="d-flex flex-column gap-2">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="non_nvq_app_ast" name="non_nvq_app_ast" <?php echo $f_non_nvq_app_ast ? 'checked' : ''; ?>>
+                                                <label class="form-check-label" for="non_nvq_app_ast">App. Assistant (Non-NVQ)</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="non_nvq_graphic" name="non_nvq_graphic" <?php echo $f_non_nvq_graphic ? 'checked' : ''; ?>>
+                                                <label class="form-check-label" for="non_nvq_graphic">Graphic Design (Non-NVQ)</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="hr" name="hr" <?php echo $f_hr ? 'checked' : ''; ?>>
+                                                <label class="form-check-label" for="hr">Human Resources (HR)</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="english" name="english" <?php echo $f_english ? 'checked' : ''; ?>>
+                                                <label class="form-check-label" for="english">English Language</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="web_design" name="web_design" <?php echo $f_web_design ? 'checked' : ''; ?>>
+                                                <label class="form-check-label" for="web_design">Web Designing</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="beetaa_kids" name="beetaa_kids" <?php echo $f_beetaa_kids ? 'checked' : ''; ?>>
+                                                <label class="form-check-label" for="beetaa_kids">Beetaa Kids</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="other_course" name="other_course" <?php echo $f_other_course ? 'checked' : ''; ?>>
+                                                <label class="form-check-label" for="other_course">Other Courses</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Buttons -->
+                            <div class="d-flex justify-content-end gap-3 flex-wrap">
+                                <a href="student_profile.php?id=<?php echo $student_id; ?>" class="btn btn-reset">
+                                    <i class="bi bi-x-circle me-1"></i>Cancel Changes
+                                </a>
+                                <button type="submit" class="btn btn-submit">
+                                    <i class="bi bi-save me-1"></i>Update Student Info
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
