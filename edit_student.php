@@ -436,7 +436,25 @@ include 'header.php';
                                 <i class="bi bi-file-earmark-text"></i> Registration Information
                             </div>
                             
-                            <!-- Index Number Builder Grid -->
+                            <!-- Hidden Index Number Submit -->
+                            <input type="hidden" id="index_number" name="index_number" value="<?php echo htmlspecialchars($student['index_number']); ?>">
+
+                            <!-- Row 1: Registration Date -->
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-6">
+                                    <label class="form-label required">Registration Date</label>
+                                    <div class="custom-date-container d-flex align-items-center gap-1" data-target-id="registration_date">
+                                        <input type="text" class="form-control text-center date-part-year" placeholder="YYYY" maxlength="4" style="width: 75px;" required>
+                                        <span class="text-muted">/</span>
+                                        <input type="text" class="form-control text-center date-part-month" placeholder="MM" maxlength="2" style="width: 50px;" required>
+                                        <span class="text-muted">/</span>
+                                        <input type="text" class="form-control text-center date-part-day" placeholder="DD" maxlength="2" style="width: 50px;" required>
+                                    </div>
+                                    <input type="hidden" id="registration_date" name="registration_date" value="<?php echo $f_registration_date; ?>">
+                                </div>
+                            </div>
+
+                            <!-- Row 2: Index Number Builder Grid (Course Code, Year, Type, Index No) -->
                             <div class="row g-3 mb-4">
                                 <div class="col-md-6">
                                     <label for="course_code" class="form-label required">Course Code</label>
@@ -466,25 +484,6 @@ include 'header.php';
                                     <input type="number" class="form-control" id="sequence_number" name="sequence_number" required placeholder="" min="1" value="<?php echo $f_sequence_number; ?>">
                                 </div>
                             </div>
-
-                             <!-- Generated Index Number Preview and Registration Date Row -->
-                             <div class="row g-3 mb-4">
-                                 <div class="col-md-6">
-                                     <label for="index_number" class="form-label fw-bold">Generated Index Number Preview</label>
-                                     <input type="text" class="form-control fw-bold text-primary" id="index_number" name="index_number" readonly placeholder="Fill inputs to generate..." value="<?php echo htmlspecialchars($student['index_number']); ?>">
-                                 </div>
-                                 <div class="col-md-6">
-                                     <label class="form-label required">Registration Date</label>
-                                     <div class="custom-date-container d-flex align-items-center gap-1" data-target-id="registration_date">
-                                         <input type="text" class="form-control text-center date-part-year" placeholder="YYYY" maxlength="4" style="width: 75px;" required>
-                                         <span class="text-muted">/</span>
-                                         <input type="text" class="form-control text-center date-part-month" placeholder="MM" maxlength="2" style="width: 50px;" required>
-                                         <span class="text-muted">/</span>
-                                         <input type="text" class="form-control text-center date-part-day" placeholder="DD" maxlength="2" style="width: 50px;" required>
-                                     </div>
-                                     <input type="hidden" id="registration_date" name="registration_date" value="<?php echo $f_registration_date; ?>">
-                                 </div>
-                             </div>
 
                             <!-- SECTION 2: PERSONAL DETAILS -->
                             <div class="form-section-title">
