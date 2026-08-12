@@ -114,6 +114,20 @@ $current_page = basename($_SERVER['PHP_SELF']);
         .text-secondary {
             color: var(--text-secondary) !important;
         }
+
+        /* Prevent bootstrap validation from showing green on valid inputs */
+        .was-validated .form-control:valid,
+        .was-validated .form-select:valid,
+        .was-validated .custom-date-container input:valid {
+            border-color: var(--border-color) !important;
+            background-image: none !important;
+            box-shadow: none !important;
+        }
+        .was-validated .form-control:valid:focus,
+        .was-validated .form-select:valid:focus {
+            border-color: var(--accent-color) !important;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2) !important;
+        }
     </style>
     <?php if (isset($extra_css)) echo $extra_css; ?>
 </head>
