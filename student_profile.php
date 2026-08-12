@@ -649,7 +649,7 @@ include 'header.php';
                                     <div class="card p-4 border bg-white mb-4">
                                         <h5 class="fw-bold mb-3 text-dark"><i class="bi bi-gear-fill me-1 text-primary"></i>Setup Course Payment Plan</h5>
                                         
-                                        <form action="student_profile.php?id=<?php echo $student_id; ?>" method="POST" class="needs-validation" novalidate>
+                                        <form action="student_profile.php?id=<?php echo $student_id; ?>" method="POST" class="needs-validation" novalidate autocomplete="off">
                                             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
                                             <input type="hidden" name="action" value="setup_payment_plan">
 
@@ -662,7 +662,7 @@ include 'header.php';
                                             <div class="row mb-3">
                                                 <div class="col-md-6 mb-3">
                                                     <label for="base_fee" class="form-label fw-bold">Course Fee (LKR)</label>
-                                                    <input type="number" step="0.01" min="1" class="form-control" id="base_fee" name="base_fee" required placeholder="">
+                                                    <input type="number" step="0.01" min="1" class="form-control" id="base_fee" name="base_fee" required placeholder="" autocomplete="off">
                                                 </div>
                                                 <div class="col-md-6 mb-3">
                                                     <label for="plan_type" class="form-label fw-bold">Payment Type</label>
@@ -677,7 +677,7 @@ include 'header.php';
                                             <div class="row mb-3">
                                                 <div class="col-md-6 mb-3">
                                                     <label for="setup_receipt_id" class="form-label fw-bold">Receipt ID (First Payment)</label>
-                                                    <input type="text" class="form-control" id="setup_receipt_id" name="setup_receipt_id" required placeholder="">
+                                                    <input type="text" class="form-control" id="setup_receipt_id" name="setup_receipt_id" required placeholder="" autocomplete="off">
                                                 </div>
                                                 <div class="col-md-6 mb-3">
                                                     <label for="amount_due_today" class="form-label fw-bold">Amount Due Right Now (LKR)</label>
@@ -702,13 +702,13 @@ include 'header.php';
                                             Amount: <span class="fw-bold text-success">LKR <?php echo number_format($fixed_amount, 2); ?></span>
                                         </p>
                                         
-                                        <form action="student_profile.php?id=<?php echo $student_id; ?>" method="POST" class="row needs-validation" novalidate>
+                                        <form action="student_profile.php?id=<?php echo $student_id; ?>" method="POST" class="row needs-validation" novalidate autocomplete="off">
                                             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
                                             <input type="hidden" name="action" value="record_installment">
  
                                             <div class="col-md-8 mb-3">
                                                 <label for="receipt_id" class="form-label fw-bold">Receipt ID</label>
-                                                <input type="text" class="form-control" id="receipt_id" name="receipt_id" required placeholder="Enter Receipt ID / Invoice Number">
+                                                <input type="text" class="form-control" id="receipt_id" name="receipt_id" required placeholder="Enter Receipt ID / Invoice Number" autocomplete="off">
                                             </div>
                                             <div class="col-md-4 mb-3">
                                                 <label class="form-label d-block">&nbsp;</label>

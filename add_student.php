@@ -357,7 +357,7 @@ include 'header.php';
 
                 <!-- Registration Card -->
                 <div class="form-card">
-                    <form action="add_student.php" method="POST" id="studentForm" class="needs-validation" novalidate>
+                    <form action="add_student.php" method="POST" id="studentForm" class="needs-validation" novalidate autocomplete="off">
                         <div class="card-header-custom d-flex justify-content-between align-items-center flex-wrap gap-3">
                             <div>
                                 <h4 class="mb-1 fw-bold"><i class="bi bi-person-bounding-box me-2 text-primary"></i>Student Registration</h4>
@@ -383,11 +383,11 @@ include 'header.php';
                                 <div class="col-md-6">
                                     <label class="form-label required">Registration Date</label>
                                     <div class="custom-date-container d-flex align-items-center gap-1" data-target-id="registration_date">
-                                        <input type="text" class="form-control text-center date-part-year" placeholder="YYYY" maxlength="4" style="width: 75px;" required>
+                                        <input type="text" class="form-control text-center date-part-year" placeholder="YYYY" maxlength="4" style="width: 75px;" required autocomplete="off">
                                         <span class="text-muted">/</span>
-                                        <input type="text" class="form-control text-center date-part-month" placeholder="MM" maxlength="2" style="width: 50px;" required>
+                                        <input type="text" class="form-control text-center date-part-month" placeholder="MM" maxlength="2" style="width: 50px;" required autocomplete="off">
                                         <span class="text-muted">/</span>
-                                        <input type="text" class="form-control text-center date-part-day" placeholder="DD" maxlength="2" style="width: 50px;" required>
+                                        <input type="text" class="form-control text-center date-part-day" placeholder="DD" maxlength="2" style="width: 50px;" required autocomplete="off">
                                     </div>
                                     <input type="hidden" id="registration_date" name="registration_date" value="<?php echo isset($_POST['registration_date']) ? htmlspecialchars($_POST['registration_date']) : ''; ?>">
                                 </div>
@@ -409,7 +409,7 @@ include 'header.php';
                                 </div>
                                 <div class="col-md-2">
                                     <label for="batch_year" class="form-label required">Year</label>
-                                    <input type="text" name="batch_year" id="batch_year" maxlength="2" pattern="\d{2}" placeholder="" required class="form-control" value="<?php echo isset($_POST['batch_year']) ? htmlspecialchars($_POST['batch_year']) : ''; ?>">
+                                    <input type="text" name="batch_year" id="batch_year" maxlength="2" pattern="\d{2}" placeholder="" required class="form-control" value="<?php echo isset($_POST['batch_year']) ? htmlspecialchars($_POST['batch_year']) : ''; ?>" autocomplete="off">
                                 </div>
                                 <div class="col-md-2" id="nvq_type_container">
                                     <label for="is_nvq" class="form-label required">Type</label>
@@ -420,7 +420,7 @@ include 'header.php';
                                 </div>
                                 <div class="col-md-2">
                                     <label for="sequence_number" class="form-label required">Index No</label>
-                                    <input type="number" class="form-control" id="sequence_number" name="sequence_number" required placeholder="" min="1" value="<?php echo isset($_POST['sequence_number']) ? htmlspecialchars($_POST['sequence_number']) : ''; ?>">
+                                    <input type="number" class="form-control" id="sequence_number" name="sequence_number" required placeholder="" min="1" value="<?php echo isset($_POST['sequence_number']) ? htmlspecialchars($_POST['sequence_number']) : ''; ?>" autocomplete="off">
                                 </div>
                             </div>
 
@@ -431,26 +431,26 @@ include 'header.php';
                              <div class="row g-3 mb-4">
                                 <div class="col-md-6">
                                     <label for="name" class="form-label required">Full Name</label>
-                                    <input type="text" class="form-control" id="name" name="name" required placeholder="" value="<?php echo isset($_POST['name']) ? htmlspecialchars($_POST['name']) : ''; ?>">
+                                    <input type="text" class="form-control" id="name" name="name" required placeholder="" value="<?php echo isset($_POST['name']) ? htmlspecialchars($_POST['name']) : ''; ?>" autocomplete="off">
                                 </div>
                                 <div class="col-md-3">
                                     <label for="nic" class="form-label required">NIC Number</label>
-                                    <input type="text" class="form-control" id="nic" name="nic" required placeholder="" pattern="[0-9]{12}" maxlength="12" value="<?php echo isset($_POST['nic']) ? htmlspecialchars($_POST['nic']) : ''; ?>">
+                                    <input type="text" class="form-control" id="nic" name="nic" required placeholder="" pattern="[0-9]{12}" maxlength="12" value="<?php echo isset($_POST['nic']) ? htmlspecialchars($_POST['nic']) : ''; ?>" autocomplete="off">
                                     <div class="invalid-feedback">Must be exactly 12 digits.</div>
                                 </div>
                                 <div class="col-md-3">
                                     <label for="contact_no" class="form-label required">Contact Number</label>
-                                    <input type="text" class="form-control" id="contact_no" name="contact_no" required placeholder="" pattern="[0-9]{10}" maxlength="10" value="<?php echo isset($_POST['contact_no']) ? htmlspecialchars($_POST['contact_no']) : ''; ?>">
+                                    <input type="text" class="form-control" id="contact_no" name="contact_no" required placeholder="" pattern="[0-9]{10}" maxlength="10" value="<?php echo isset($_POST['contact_no']) ? htmlspecialchars($_POST['contact_no']) : ''; ?>" autocomplete="off">
                                     <div class="invalid-feedback">Must be exactly 10 digits.</div>
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label required">Date of Birth</label>
                                     <div class="custom-date-container d-flex align-items-center gap-1" data-target-id="dob">
-                                        <input type="text" class="form-control text-center date-part-year" placeholder="YYYY" maxlength="4" style="width: 75px;" required>
+                                        <input type="text" class="form-control text-center date-part-year" placeholder="YYYY" maxlength="4" style="width: 75px;" required autocomplete="off">
                                         <span class="text-muted">/</span>
-                                        <input type="text" class="form-control text-center date-part-month" placeholder="MM" maxlength="2" style="width: 50px;" required>
+                                        <input type="text" class="form-control text-center date-part-month" placeholder="MM" maxlength="2" style="width: 50px;" required autocomplete="off">
                                         <span class="text-muted">/</span>
-                                        <input type="text" class="form-control text-center date-part-day" placeholder="DD" maxlength="2" style="width: 50px;" required>
+                                        <input type="text" class="form-control text-center date-part-day" placeholder="DD" maxlength="2" style="width: 50px;" required autocomplete="off">
                                     </div>
                                     <input type="hidden" id="dob" name="dob" value="<?php echo isset($_POST['dob']) ? htmlspecialchars($_POST['dob']) : date('Y-m-d'); ?>">
                                 </div>
@@ -464,7 +464,7 @@ include 'header.php';
                                 </div>
                                 <div class="col-md-6">
                                     <label for="address" class="form-label required">Home Address</label>
-                                    <input type="text" class="form-control" id="address" name="address" required placeholder="" value="<?php echo isset($_POST['address']) ? htmlspecialchars($_POST['address']) : ''; ?>">
+                                    <input type="text" class="form-control" id="address" name="address" required placeholder="" value="<?php echo isset($_POST['address']) ? htmlspecialchars($_POST['address']) : ''; ?>" autocomplete="off">
                                 </div>
                             </div>
 
@@ -475,11 +475,11 @@ include 'header.php';
                             <div class="row g-3 mb-4">
                                 <div class="col-md-4">
                                     <label for="guardian_name" class="form-label">Guardian Name</label>
-                                    <input type="text" class="form-control" id="guardian_name" name="guardian_name" placeholder="" value="<?php echo isset($_POST['guardian_name']) ? htmlspecialchars($_POST['guardian_name']) : ''; ?>">
+                                    <input type="text" class="form-control" id="guardian_name" name="guardian_name" placeholder="" value="<?php echo isset($_POST['guardian_name']) ? htmlspecialchars($_POST['guardian_name']) : ''; ?>" autocomplete="off">
                                 </div>
                                 <div class="col-md-8">
                                     <label for="guardian_details" class="form-label">Guardian Contact Info / Details</label>
-                                    <input type="text" class="form-control" id="guardian_details" name="guardian_details" placeholder="" value="<?php echo isset($_POST['guardian_details']) ? htmlspecialchars($_POST['guardian_details']) : ''; ?>">
+                                    <input type="text" class="form-control" id="guardian_details" name="guardian_details" placeholder="" value="<?php echo isset($_POST['guardian_details']) ? htmlspecialchars($_POST['guardian_details']) : ''; ?>" autocomplete="off">
                                 </div>
                             </div>
 

@@ -194,7 +194,7 @@ include 'header.php';
                         <p class="text-muted mb-0 small">Load a student batch by Course and Batch Year, and define the exam metadata.</p>
                     </div>
                     <div class="p-4">
-                        <form action="bulk_grading.php" method="GET" class="needs-validation" novalidate>
+                        <form action="bulk_grading.php" method="GET" class="needs-validation" novalidate autocomplete="off">
                             <div class="row g-3">
                                 <div class="col-md-4">
                                     <label for="course_code" class="form-label required">Course Code</label>
@@ -210,20 +210,20 @@ include 'header.php';
                                 </div>
                                  <div class="col-md-2">
                                      <label for="batch_year" class="form-label required">Year</label>
-                                     <input type="text" class="form-control w-100" id="batch_year" name="batch_year" maxlength="2" pattern="\d{2}" placeholder="" required value="<?php echo htmlspecialchars($batch_year); ?>">
+                                     <input type="text" class="form-control w-100" id="batch_year" name="batch_year" maxlength="2" pattern="\d{2}" placeholder="" required value="<?php echo htmlspecialchars($batch_year); ?>" autocomplete="off">
                                  </div>
                                  <div class="col-md-3">
                                      <label for="exam_name" class="form-label required">Exam Name</label>
-                                     <input type="text" class="form-control w-100" id="exam_name" name="exam_name" required placeholder="" value="<?php echo htmlspecialchars($exam_name); ?>">
+                                     <input type="text" class="form-control w-100" id="exam_name" name="exam_name" required placeholder="" value="<?php echo htmlspecialchars($exam_name); ?>" autocomplete="off">
                                  </div>
                                  <div class="col-md-3">
                                      <span class="form-label required d-block mb-1">Exam Date</span>
                                      <div class="custom-date-container d-flex align-items-center gap-1" data-target-id="exam_date">
-                                         <input type="text" class="form-control text-center date-part-year" placeholder="YYYY" maxlength="4" style="width: 75px;" required>
+                                         <input type="text" class="form-control text-center date-part-year" placeholder="YYYY" maxlength="4" style="width: 75px;" required autocomplete="off">
                                          <span class="text-muted">/</span>
-                                         <input type="text" class="form-control text-center date-part-month" placeholder="MM" maxlength="2" style="width: 50px;" required>
+                                         <input type="text" class="form-control text-center date-part-month" placeholder="MM" maxlength="2" style="width: 50px;" required autocomplete="off">
                                          <span class="text-muted">/</span>
-                                         <input type="text" class="form-control text-center date-part-day" placeholder="DD" maxlength="2" style="width: 50px;" required>
+                                         <input type="text" class="form-control text-center date-part-day" placeholder="DD" maxlength="2" style="width: 50px;" required autocomplete="off">
                                       </div>
                                       <input type="hidden" id="exam_date" name="exam_date" value="<?php echo htmlspecialchars($exam_date); ?>">
                                   </div>
@@ -255,7 +255,7 @@ include 'header.php';
                                     <p class="text-muted small mb-0">Select another batch criteria or add students first.</p>
                                 </div>
                             <?php else: ?>
-                                <form action="bulk_grading.php" method="POST" class="needs-validation" novalidate>
+                                <form action="bulk_grading.php" method="POST" class="needs-validation" novalidate autocomplete="off">
                                     <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
                                     <input type="hidden" name="action" value="submit_bulk_grades">
                                     
@@ -291,7 +291,7 @@ include 'header.php';
                                                             </select>
                                                         </td>
                                                          <td>
-                                                             <input type="number" class="form-control form-control-sm w-100" name="mark[<?php echo $s['id']; ?>]" min="0" max="100" step="0.01" placeholder="">
+                                                             <input type="number" class="form-control form-control-sm w-100" name="mark[<?php echo $s['id']; ?>]" min="0" max="100" step="0.01" placeholder="" autocomplete="off">
                                                          </td>
                                                     </tr>
                                                 <?php endforeach; ?>
