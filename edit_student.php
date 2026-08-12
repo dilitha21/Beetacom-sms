@@ -424,21 +424,6 @@ include 'header.php';
                                 <h4 class="mb-1 fw-bold"><i class="bi bi-pencil-square me-2 text-primary"></i>Update Registration Info</h4>
                                 <p class="text-muted mb-0 small">Update academic and personal profile details below</p>
                             </div>
-                            
-                            <!-- Date Container -->
-                            <div>
-                                <div class="d-flex align-items-center gap-2 px-3 py-2 rounded-3" style="background-color: var(--bg-main); border: 1px solid var(--border-color);">
-                                    <span class="form-label required mb-0 small fw-bold text-dark" style="white-space: nowrap;">Reg. Date:</span>
-                                    <div class="custom-date-container d-flex align-items-center gap-1" data-target-id="registration_date">
-                                        <input type="text" class="form-control form-control-sm text-center border-0 bg-transparent p-0 text-dark date-part-year" placeholder="YYYY" maxlength="4" style="box-shadow: none; outline: none; width: 45px; font-weight: bold;" required>
-                                        <span class="text-muted small">/</span>
-                                        <input type="text" class="form-control form-control-sm text-center border-0 bg-transparent p-0 text-dark date-part-month" placeholder="MM" maxlength="2" style="box-shadow: none; outline: none; width: 30px; font-weight: bold;" required>
-                                        <span class="text-muted small">/</span>
-                                        <input type="text" class="form-control form-control-sm text-center border-0 bg-transparent p-0 text-dark date-part-day" placeholder="DD" maxlength="2" style="box-shadow: none; outline: none; width: 30px; font-weight: bold;" required>
-                                    </div>
-                                    <input type="hidden" id="registration_date" name="registration_date" value="<?php echo $f_registration_date; ?>">
-                                </div>
-                            </div>
                         </div>
 
                         <div class="card-body p-4 p-md-5">
@@ -482,13 +467,24 @@ include 'header.php';
                                 </div>
                             </div>
 
-                            <!-- Generated Index Number Preview -->
-                            <div class="row g-3 mb-4">
-                                <div class="col-md-6">
-                                    <label for="index_number" class="form-label fw-bold">Generated Index Number Preview</label>
-                                    <input type="text" class="form-control fw-bold text-primary" id="index_number" name="index_number" readonly placeholder="Fill inputs to generate..." value="<?php echo htmlspecialchars($student['index_number']); ?>">
-                                </div>
-                            </div>
+                             <!-- Generated Index Number Preview and Registration Date Row -->
+                             <div class="row g-3 mb-4">
+                                 <div class="col-md-6">
+                                     <label for="index_number" class="form-label fw-bold">Generated Index Number Preview</label>
+                                     <input type="text" class="form-control fw-bold text-primary" id="index_number" name="index_number" readonly placeholder="Fill inputs to generate..." value="<?php echo htmlspecialchars($student['index_number']); ?>">
+                                 </div>
+                                 <div class="col-md-6">
+                                     <label class="form-label required">Registration Date</label>
+                                     <div class="custom-date-container d-flex align-items-center gap-1" data-target-id="registration_date">
+                                         <input type="text" class="form-control text-center date-part-year" placeholder="YYYY" maxlength="4" style="width: 75px;" required>
+                                         <span class="text-muted">/</span>
+                                         <input type="text" class="form-control text-center date-part-month" placeholder="MM" maxlength="2" style="width: 50px;" required>
+                                         <span class="text-muted">/</span>
+                                         <input type="text" class="form-control text-center date-part-day" placeholder="DD" maxlength="2" style="width: 50px;" required>
+                                     </div>
+                                     <input type="hidden" id="registration_date" name="registration_date" value="<?php echo $f_registration_date; ?>">
+                                 </div>
+                             </div>
 
                             <!-- SECTION 2: PERSONAL DETAILS -->
                             <div class="form-section-title">

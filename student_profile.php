@@ -522,56 +522,56 @@ include 'header.php';
                                 </div>
 
                                 <div class="profile-section-title mt-4">
-                                    <i class="bi bi-mortarboard-fill"></i> Academic Qualifications
+                                    <i class="bi bi-mortarboard-fill"></i> Academic & Course Credentials
                                 </div>
-                                <div class="mb-3">
-                                    <?php
-                                    $quals = [];
-                                    if ($student['gce_ol']) $quals[] = 'G.C.E. O/L';
-                                    if ($student['gce_al_science']) $quals[] = 'G.C.E. A/L - Science';
-                                    if ($student['gce_al_maths']) $quals[] = 'G.C.E. A/L - Mathematics';
-                                    if ($student['gce_al_commerce']) $quals[] = 'G.C.E. A/L - Commerce';
-                                    if ($student['gce_al_art']) $quals[] = 'G.C.E. A/L - Arts';
-                                    if ($student['gce_al_tech']) $quals[] = 'G.C.E. A/L - Technology';
-                                    if ($student['kids_grade']) $quals[] = 'Kids School Grade';
-                                    if ($student['other_edu']) $quals[] = 'Other Qualifications';
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="profile-label">Academic Qualifications</div>
+                                        <div class="profile-value">
+                                            <?php
+                                            $quals = [];
+                                            if ($student['gce_ol']) $quals[] = 'G.C.E. O/L';
+                                            if ($student['gce_al_science']) $quals[] = 'G.C.E. A/L - Science';
+                                            if ($student['gce_al_maths']) $quals[] = 'G.C.E. A/L - Mathematics';
+                                            if ($student['gce_al_commerce']) $quals[] = 'G.C.E. A/L - Commerce';
+                                            if ($student['gce_al_art']) $quals[] = 'G.C.E. A/L - Arts';
+                                            if ($student['gce_al_tech']) $quals[] = 'G.C.E. A/L - Technology';
+                                            if ($student['kids_grade']) $quals[] = 'Kids School Grade';
+                                            if ($student['other_edu']) $quals[] = 'Other Qualifications';
 
-                                    if (empty($quals)):
-                                        echo '<span class="text-muted small">No qualifications selected.</span>';
-                                    else:
-                                        foreach ($quals as $qual):
-                                            echo '<span class="badge-tag-qual"><i class="bi bi-check2-circle me-1"></i>' . htmlspecialchars($qual) . '</span>';
-                                        endforeach;
-                                    endif;
-                                    ?>
-                                </div>
+                                            if (empty($quals)) {
+                                                echo '<span class="text-muted small">Not Provided</span>';
+                                            } else {
+                                                echo htmlspecialchars(implode(', ', $quals));
+                                            }
+                                            ?>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="profile-label">Enrolled Courses</div>
+                                        <div class="profile-value">
+                                            <?php
+                                            $courses = [];
+                                            if ($student['ict_tech']) $courses[] = 'ICT Technician (NVQ)';
+                                            if ($student['computer_app_ast']) $courses[] = 'Computer Application Assistant (NVQ)';
+                                            if ($student['graphic_designer']) $courses[] = 'Graphic Designer (NVQ)';
+                                            if ($student['pre_school']) $courses[] = 'Pre-School Teacher Training (NVQ)';
+                                            if ($student['non_nvq_app_ast']) $courses[] = 'App Assistant (Non-NVQ)';
+                                            if ($student['non_nvq_graphic']) $courses[] = 'Graphic Design (Non-NVQ)';
+                                            if ($student['hr']) $courses[] = 'Human Resources Management';
+                                            if ($student['english']) $courses[] = 'English Language Training';
+                                            if ($student['web_design']) $courses[] = 'Web Designing';
+                                            if ($student['beetaa_kids']) $courses[] = 'Beetaa Kids Course';
+                                            if ($student['other_course']) $courses[] = 'Other Special Course';
 
-                                <div class="profile-section-title mt-4">
-                                    <i class="bi bi-journal-bookmark-fill"></i> Enrolled Courses
-                                </div>
-                                <div class="mb-2">
-                                    <?php
-                                    $courses = [];
-                                    if ($student['ict_tech']) $courses[] = 'ICT Technician (NVQ)';
-                                    if ($student['computer_app_ast']) $courses[] = 'Computer Application Assistant (NVQ)';
-                                    if ($student['graphic_designer']) $courses[] = 'Graphic Designer (NVQ)';
-                                    if ($student['pre_school']) $courses[] = 'Pre-School Teacher Training (NVQ)';
-                                    if ($student['non_nvq_app_ast']) $courses[] = 'App Assistant (Non-NVQ)';
-                                    if ($student['non_nvq_graphic']) $courses[] = 'Graphic Design (Non-NVQ)';
-                                    if ($student['hr']) $courses[] = 'Human Resources Management';
-                                    if ($student['english']) $courses[] = 'English Language Training';
-                                    if ($student['web_design']) $courses[] = 'Web Designing';
-                                    if ($student['beetaa_kids']) $courses[] = 'Beetaa Kids Course';
-                                    if ($student['other_course']) $courses[] = 'Other Special Course';
-
-                                    if (empty($courses)):
-                                        echo '<span class="text-muted small">No courses enrolled.</span>';
-                                    else:
-                                        foreach ($courses as $course):
-                                            echo '<span class="badge-tag"><i class="bi bi-book-half me-1"></i>' . htmlspecialchars($course) . '</span>';
-                                        endforeach;
-                                    endif;
-                                    ?>
+                                            if (empty($courses)) {
+                                                echo '<span class="text-muted small">Not Provided</span>';
+                                            } else {
+                                                echo htmlspecialchars(implode(', ', $courses));
+                                            }
+                                            ?>
+                                        </div>
+                                    </div>
                                 </div>
 
                             </div>
@@ -634,9 +634,9 @@ include 'header.php';
                                                 <div class="profile-label">Admission Fee Status</div>
                                                 <div>
                                                     <?php if ($plan['admission_paid']): ?>
-                                                        <span class="badge bg-success-subtle text-success border border-success border-opacity-25 px-2.5 py-1.5 rounded"><i class="bi bi-check2-circle me-1"></i>Settled (Paid)</span>
+                                                        <div class="fs-5 fw-bold text-success">Settled</div>
                                                     <?php else: ?>
-                                                        <span class="badge bg-danger-subtle text-danger border border-danger border-opacity-25 px-2.5 py-1.5 rounded"><i class="bi bi-x-circle me-1"></i>Pending</span>
+                                                        <div class="fs-5 fw-bold text-danger">Pending</div>
                                                     <?php endif; ?>
                                                 </div>
                                             </div>
@@ -702,7 +702,7 @@ include 'header.php';
                                             Amount: <span class="fw-bold text-success">LKR <?php echo number_format($fixed_amount, 2); ?></span>
                                         </p>
                                         
-                                        <form action="student_profile.php?id=<?php echo $student_id; ?>" method="POST" class="row align-items-end needs-validation" novalidate>
+                                        <form action="student_profile.php?id=<?php echo $student_id; ?>" method="POST" class="row needs-validation" novalidate>
                                             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
                                             <input type="hidden" name="action" value="record_installment">
  
@@ -711,8 +711,9 @@ include 'header.php';
                                                 <input type="text" class="form-control" id="receipt_id" name="receipt_id" required placeholder="Enter Receipt ID / Invoice Number">
                                             </div>
                                             <div class="col-md-4 mb-3">
-                                                <button type="submit" class="btn btn-accent w-100 py-2">
-                                                    <i class="bi bi-check2-circle me-1"></i>Record <?php echo get_ordinal(count($receipts) + 1); ?> Installment
+                                                <label class="form-label d-block">&nbsp;</label>
+                                                <button type="submit" class="btn btn-accent w-100" style="height: 42.8px; padding: 0.6rem 0.85rem; display: flex; align-items: center; justify-content: center;">
+                                                    <i class="bi bi-check2-circle me-1"></i>Record Installment
                                                 </button>
                                             </div>
                                         </form>
@@ -788,11 +789,11 @@ include 'header.php';
                                     </h6>
                                     <div class="form-check mb-0">
                                         <input class="form-check-input" type="checkbox" id="cert_completion_issued" name="cert_completion_issued" value="1" <?php echo ($student['cert_completion_issued'] == 1) ? 'checked' : ''; ?> style="cursor: pointer;">
-                                        <label class="form-check-label small fw-semibold text-dark" for="cert_completion_issued" style="cursor: pointer;">Completion Cert</label>
+                                        <label class="form-check-label small fw-semibold text-dark" for="cert_completion_issued" style="cursor: pointer;">Completion Certificate</label>
                                     </div>
                                     <div class="form-check mb-0">
                                         <input class="form-check-input" type="checkbox" id="english_cert_issued" name="english_cert_issued" value="1" <?php echo ($student['english_cert_issued'] == 1) ? 'checked' : ''; ?> style="cursor: pointer;">
-                                        <label class="form-check-label small fw-semibold text-dark" for="english_cert_issued" style="cursor: pointer;">English Cert</label>
+                                        <label class="form-check-label small fw-semibold text-dark" for="english_cert_issued" style="cursor: pointer;">English Certificate</label>
                                     </div>
                                     
                                     <button type="submit" class="btn btn-primary btn-sm px-3 py-1">
