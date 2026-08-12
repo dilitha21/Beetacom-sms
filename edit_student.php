@@ -509,8 +509,8 @@ include 'header.php';
                                     <input type="text" class="form-control" id="contact_no" name="contact_no" required placeholder="" pattern="[0-9]{10}" maxlength="10" value="<?php echo $f_contact_no; ?>">
                                     <div class="invalid-feedback">Must be exactly 10 digits.</div>
                                 </div>
-                                <div class="col-md-6">
-                                    <span class="form-label required d-block mb-1">Date of Birth</span>
+                                <div class="col-md-4">
+                                    <label class="form-label required">Date of Birth</label>
                                     <div class="custom-date-container d-flex align-items-center gap-1" data-target-id="dob">
                                         <input type="text" class="form-control text-center date-part-year" placeholder="YYYY" maxlength="4" style="width: 75px;" required>
                                         <span class="text-muted">/</span>
@@ -520,7 +520,7 @@ include 'header.php';
                                     </div>
                                     <input type="hidden" id="dob" name="dob" value="<?php echo $f_dob; ?>">
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-md-2">
                                     <label for="gender" class="form-label required">Gender</label>
                                     <select class="form-select" id="gender" name="gender" required>
                                         <option value="" disabled>Select</option>
@@ -528,9 +528,7 @@ include 'header.php';
                                         <option value="Female" <?php echo ($f_gender === 'Female') ? 'selected' : ''; ?>>Female</option>
                                     </select>
                                 </div>
-                            </div>
-                            <div class="row g-3 mb-4">
-                                <div class="col-md-12">
+                                <div class="col-md-6">
                                     <label for="address" class="form-label required">Home Address</label>
                                     <input type="text" class="form-control" id="address" name="address" required placeholder="" value="<?php echo $f_address; ?>">
                                 </div>
