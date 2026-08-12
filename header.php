@@ -128,6 +128,12 @@ $current_page = basename($_SERVER['PHP_SELF']);
             border-color: var(--accent-color) !important;
             box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2) !important;
         }
+
+        /* Prevent Bootstrap validation padding from pushing text out of small date component inputs */
+        .custom-date-container input {
+            padding-right: 0.25rem !important;
+            padding-left: 0.25rem !important;
+        }
     </style>
     <?php if (isset($extra_css)) echo $extra_css; ?>
 </head>
