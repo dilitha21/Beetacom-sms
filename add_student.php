@@ -368,8 +368,15 @@ include 'header.php';
                              <div>
                                  <!-- Registration Date -->
                                  <div class="d-flex align-items-center gap-2 px-3 py-2 rounded-3" style="background-color: var(--bg-main); border: 1px solid var(--border-color);">
-                                     <label for="registration_date" class="form-label required mb-0 small fw-bold text-dark" style="white-space: nowrap;">Reg. Date:</label>
-                                     <input type="date" class="form-control form-control-sm border-0 bg-transparent p-0 text-dark" id="registration_date" name="registration_date" required value="<?php echo isset($_POST['registration_date']) ? htmlspecialchars($_POST['registration_date']) : ''; ?>" style="box-shadow: none; outline: none; width: 130px;">
+                                     <span class="form-label required mb-0 small fw-bold text-dark" style="white-space: nowrap;">Reg. Date:</span>
+                                     <div class="custom-date-container d-flex align-items-center gap-1" data-target-id="registration_date">
+                                         <input type="text" class="form-control form-control-sm text-center border-0 bg-transparent p-0 text-dark date-part-year" placeholder="YYYY" maxlength="4" style="box-shadow: none; outline: none; width: 45px; font-weight: bold;" required>
+                                         <span class="text-muted small">/</span>
+                                         <input type="text" class="form-control form-control-sm text-center border-0 bg-transparent p-0 text-dark date-part-month" placeholder="MM" maxlength="2" style="box-shadow: none; outline: none; width: 30px; font-weight: bold;" required>
+                                         <span class="text-muted small">/</span>
+                                         <input type="text" class="form-control form-control-sm text-center border-0 bg-transparent p-0 text-dark date-part-day" placeholder="DD" maxlength="2" style="box-shadow: none; outline: none; width: 30px; font-weight: bold;" required>
+                                     </div>
+                                     <input type="hidden" id="registration_date" name="registration_date" value="<?php echo isset($_POST['registration_date']) ? htmlspecialchars($_POST['registration_date']) : ''; ?>">
                                  </div>
                              </div>
                          </div>
@@ -400,7 +407,7 @@ include 'header.php';
                                 </div>
                                 <div class="col-md-2">
                                     <label for="batch_year" class="form-label required">Year</label>
-                                    <input type="text" name="batch_year" id="batch_year" maxlength="2" pattern="\d{2}" placeholder="26" required class="form-control" value="<?php echo isset($_POST['batch_year']) ? htmlspecialchars($_POST['batch_year']) : ''; ?>">
+                                    <input type="text" name="batch_year" id="batch_year" maxlength="2" pattern="\d{2}" placeholder="" required class="form-control" value="<?php echo isset($_POST['batch_year']) ? htmlspecialchars($_POST['batch_year']) : ''; ?>">
                                 </div>
                                 <div class="col-md-2" id="nvq_type_container">
                                     <label for="is_nvq" class="form-label required">Type</label>
@@ -411,7 +418,7 @@ include 'header.php';
                                 </div>
                                 <div class="col-md-2">
                                     <label for="sequence_number" class="form-label required">Index No</label>
-                                    <input type="number" class="form-control" id="sequence_number" name="sequence_number" required placeholder="3782" min="1" value="<?php echo isset($_POST['sequence_number']) ? htmlspecialchars($_POST['sequence_number']) : ''; ?>">
+                                    <input type="number" class="form-control" id="sequence_number" name="sequence_number" required placeholder="" min="1" value="<?php echo isset($_POST['sequence_number']) ? htmlspecialchars($_POST['sequence_number']) : ''; ?>">
                                 </div>
                             </div>
 
@@ -427,24 +434,31 @@ include 'header.php';
                             <div class="form-section-title">
                                 <i class="bi bi-person"></i> Personal Profile
                             </div>
-                            <div class="row g-3 mb-4">
+                             <div class="row g-3 mb-4">
                                 <div class="col-md-6">
                                     <label for="name" class="form-label required">Full Name</label>
-                                    <input type="text" class="form-control" id="name" name="name" required placeholder="e.g. John Doe" value="<?php echo isset($_POST['name']) ? htmlspecialchars($_POST['name']) : ''; ?>">
+                                    <input type="text" class="form-control" id="name" name="name" required placeholder="" value="<?php echo isset($_POST['name']) ? htmlspecialchars($_POST['name']) : ''; ?>">
                                 </div>
                                 <div class="col-md-3">
                                     <label for="nic" class="form-label required">NIC Number</label>
-                                    <input type="text" class="form-control" id="nic" name="nic" required placeholder="12-digit number" pattern="[0-9]{12}" maxlength="12" value="<?php echo isset($_POST['nic']) ? htmlspecialchars($_POST['nic']) : ''; ?>">
+                                    <input type="text" class="form-control" id="nic" name="nic" required placeholder="" pattern="[0-9]{12}" maxlength="12" value="<?php echo isset($_POST['nic']) ? htmlspecialchars($_POST['nic']) : ''; ?>">
                                     <div class="invalid-feedback">Must be exactly 12 digits.</div>
                                 </div>
                                 <div class="col-md-3">
                                     <label for="contact_no" class="form-label required">Contact Number</label>
-                                    <input type="text" class="form-control" id="contact_no" name="contact_no" required placeholder="10-digit number" pattern="[0-9]{10}" maxlength="10" value="<?php echo isset($_POST['contact_no']) ? htmlspecialchars($_POST['contact_no']) : ''; ?>">
+                                    <input type="text" class="form-control" id="contact_no" name="contact_no" required placeholder="" pattern="[0-9]{10}" maxlength="10" value="<?php echo isset($_POST['contact_no']) ? htmlspecialchars($_POST['contact_no']) : ''; ?>">
                                     <div class="invalid-feedback">Must be exactly 10 digits.</div>
                                 </div>
                                 <div class="col-md-3">
-                                    <label for="dob" class="form-label required">Date of Birth</label>
-                                    <input type="date" class="form-control" id="dob" name="dob" required value="<?php echo isset($_POST['dob']) ? htmlspecialchars($_POST['dob']) : ''; ?>">
+                                    <span class="form-label required d-block mb-1">Date of Birth</span>
+                                    <div class="custom-date-container d-flex align-items-center gap-1" data-target-id="dob">
+                                        <input type="text" class="form-control text-center date-part-year" placeholder="YYYY" maxlength="4" style="width: 75px;" required>
+                                        <span class="text-muted">/</span>
+                                        <input type="text" class="form-control text-center date-part-month" placeholder="MM" maxlength="2" style="width: 50px;" required>
+                                        <span class="text-muted">/</span>
+                                        <input type="text" class="form-control text-center date-part-day" placeholder="DD" maxlength="2" style="width: 50px;" required>
+                                    </div>
+                                    <input type="hidden" id="dob" name="dob" value="<?php echo isset($_POST['dob']) ? htmlspecialchars($_POST['dob']) : ''; ?>">
                                 </div>
                                 <div class="col-md-3">
                                     <label for="gender" class="form-label required">Gender</label>
@@ -456,7 +470,7 @@ include 'header.php';
                                 </div>
                                 <div class="col-md-6">
                                     <label for="address" class="form-label required">Home Address</label>
-                                    <input type="text" class="form-control" id="address" name="address" required placeholder="Full street address" value="<?php echo isset($_POST['address']) ? htmlspecialchars($_POST['address']) : ''; ?>">
+                                    <input type="text" class="form-control" id="address" name="address" required placeholder="" value="<?php echo isset($_POST['address']) ? htmlspecialchars($_POST['address']) : ''; ?>">
                                 </div>
                             </div>
 
@@ -467,11 +481,11 @@ include 'header.php';
                             <div class="row g-3 mb-4">
                                 <div class="col-md-4">
                                     <label for="guardian_name" class="form-label">Guardian Name</label>
-                                    <input type="text" class="form-control" id="guardian_name" name="guardian_name" placeholder="Name of parent/guardian" value="<?php echo isset($_POST['guardian_name']) ? htmlspecialchars($_POST['guardian_name']) : ''; ?>">
+                                    <input type="text" class="form-control" id="guardian_name" name="guardian_name" placeholder="" value="<?php echo isset($_POST['guardian_name']) ? htmlspecialchars($_POST['guardian_name']) : ''; ?>">
                                 </div>
                                 <div class="col-md-8">
                                     <label for="guardian_details" class="form-label">Guardian Contact Info / Details</label>
-                                    <input type="text" class="form-control" id="guardian_details" name="guardian_details" placeholder="Contact number, occupation, relationship, etc." value="<?php echo isset($_POST['guardian_details']) ? htmlspecialchars($_POST['guardian_details']) : ''; ?>">
+                                    <input type="text" class="form-control" id="guardian_details" name="guardian_details" placeholder="" value="<?php echo isset($_POST['guardian_details']) ? htmlspecialchars($_POST['guardian_details']) : ''; ?>">
                                 </div>
                             </div>
 
@@ -612,9 +626,91 @@ include 'header.php';
 
     <!-- Vanilla Javascript Logic -->
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+         document.addEventListener('DOMContentLoaded', function() {
             const registrationDateInput = document.getElementById('registration_date');
             
+            // Sync helper functions
+            const syncHiddenToUI = (hiddenInput) => {
+                const container = document.querySelector(`.custom-date-container[data-target-id="${hiddenInput.id}"]`);
+                if (!container) return;
+                const val = hiddenInput.value || '';
+                const parts = val.split('-');
+                if (parts.length === 3) {
+                    container.querySelector('.date-part-year').value = parts[0];
+                    container.querySelector('.date-part-month').value = parts[1];
+                    container.querySelector('.date-part-day').value = parts[2];
+                } else {
+                    container.querySelector('.date-part-year').value = '';
+                    container.querySelector('.date-part-month').value = '';
+                    container.querySelector('.date-part-day').value = '';
+                }
+            };
+
+            const syncUIToHidden = (container) => {
+                const targetId = container.getAttribute('data-target-id');
+                const hiddenInput = document.getElementById(targetId);
+                const y = container.querySelector('.date-part-year').value.trim();
+                const m = container.querySelector('.date-part-month').value.trim();
+                const d = container.querySelector('.date-part-day').value.trim();
+                if (y && m && d) {
+                    hiddenInput.value = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+                } else {
+                    hiddenInput.value = '';
+                }
+                // Dispatch change/input events
+                hiddenInput.dispatchEvent(new Event('change'));
+                hiddenInput.dispatchEvent(new Event('input'));
+            };
+
+            // Setup Date component logic
+            document.querySelectorAll('.custom-date-container').forEach(container => {
+                const yInput = container.querySelector('.date-part-year');
+                const mInput = container.querySelector('.date-part-month');
+                const dInput = container.querySelector('.date-part-day');
+
+                yInput.addEventListener('input', () => {
+                    yInput.value = yInput.value.replace(/\D/g, '');
+                    if (yInput.value.length === 4) {
+                        mInput.focus();
+                    }
+                    syncUIToHidden(container);
+                });
+
+                mInput.addEventListener('input', () => {
+                    mInput.value = mInput.value.replace(/\D/g, '');
+                    if (mInput.value.length === 2) {
+                        dInput.focus();
+                    }
+                    syncUIToHidden(container);
+                });
+
+                dInput.addEventListener('input', () => {
+                    dInput.value = dInput.value.replace(/\D/g, '');
+                    syncUIToHidden(container);
+                });
+
+                mInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Backspace' && !mInput.value) {
+                        yInput.focus();
+                    }
+                });
+
+                dInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Backspace' && !dInput.value) {
+                        mInput.focus();
+                    }
+                });
+
+                [mInput, dInput].forEach(input => {
+                    input.addEventListener('blur', () => {
+                        if (input.value && input.value.length === 1) {
+                            input.value = input.value.padStart(2, '0');
+                        }
+                        syncUIToHidden(container);
+                    });
+                });
+            });
+
             // Function to set registration date to today's date (local timezone)
             const setRegistrationDateToToday = () => {
                 const now = new Date();
@@ -622,11 +718,21 @@ include 'header.php';
                 const month = String(now.getMonth() + 1).padStart(2, '0');
                 const day = String(now.getDate()).padStart(2, '0');
                 registrationDateInput.value = `${year}-${month}-${day}`;
+                syncHiddenToUI(registrationDateInput);
             };
+
+            // Initialize inputs from hidden inputs
+            document.querySelectorAll('input[type="hidden"]').forEach(hidden => {
+                if (hidden.id === 'registration_date' || hidden.id === 'dob') {
+                    syncHiddenToUI(hidden);
+                }
+            });
 
             // Initialize on page load (keep user input if form submitted with errors, otherwise default to today)
             if (!registrationDateInput.value) {
                 setRegistrationDateToToday();
+            } else {
+                syncHiddenToUI(registrationDateInput);
             }
 
             // Elements for Index Number Builder

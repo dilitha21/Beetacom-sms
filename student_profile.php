@@ -662,7 +662,7 @@ include 'header.php';
                                             <div class="row mb-3">
                                                 <div class="col-md-6 mb-3">
                                                     <label for="base_fee" class="form-label fw-bold">Course Fee (LKR)</label>
-                                                    <input type="number" step="0.01" min="1" class="form-control" id="base_fee" name="base_fee" required placeholder="e.g. 60000">
+                                                    <input type="number" step="0.01" min="1" class="form-control" id="base_fee" name="base_fee" required placeholder="">
                                                 </div>
                                                 <div class="col-md-6 mb-3">
                                                     <label for="plan_type" class="form-label fw-bold">Payment Type</label>
@@ -677,7 +677,7 @@ include 'header.php';
                                             <div class="row mb-3">
                                                 <div class="col-md-6 mb-3">
                                                     <label for="setup_receipt_id" class="form-label fw-bold">Receipt ID (First Payment)</label>
-                                                    <input type="text" class="form-control" id="setup_receipt_id" name="setup_receipt_id" required placeholder="e.g. REC-12345">
+                                                    <input type="text" class="form-control" id="setup_receipt_id" name="setup_receipt_id" required placeholder="">
                                                 </div>
                                                 <div class="col-md-6 mb-3">
                                                     <label for="amount_due_today" class="form-label fw-bold">Amount Due Right Now (LKR)</label>

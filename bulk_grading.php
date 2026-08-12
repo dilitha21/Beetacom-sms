@@ -208,19 +208,26 @@ include 'header.php';
                                         <option value="ICT" <?php echo ($course_code === 'ICT') ? 'selected' : ''; ?>>ICT - ICT Technician (LV4)</option>
                                     </select>
                                 </div>
-                                <div class="col-md-2">
-                                    <label for="batch_year" class="form-label required">Year</label>
-                                    <input type="text" class="form-control w-100" id="batch_year" name="batch_year" maxlength="2" pattern="\d{2}" placeholder="26" required value="<?php echo htmlspecialchars($batch_year); ?>">
-                                </div>
-                                <div class="col-md-3">
-                                    <label for="exam_name" class="form-label required">Exam Name</label>
-                                    <input type="text" class="form-control w-100" id="exam_name" name="exam_name" required placeholder="e.g. Final Practical" value="<?php echo htmlspecialchars($exam_name); ?>">
-                                </div>
-                                <div class="col-md-3">
-                                    <label for="exam_date" class="form-label required">Exam Date</label>
-                                    <input type="date" class="form-control w-100" id="exam_date" name="exam_date" required value="<?php echo htmlspecialchars($exam_date); ?>">
-                                </div>
-                            </div>
+                                 <div class="col-md-2">
+                                     <label for="batch_year" class="form-label required">Year</label>
+                                     <input type="text" class="form-control w-100" id="batch_year" name="batch_year" maxlength="2" pattern="\d{2}" placeholder="" required value="<?php echo htmlspecialchars($batch_year); ?>">
+                                 </div>
+                                 <div class="col-md-3">
+                                     <label for="exam_name" class="form-label required">Exam Name</label>
+                                     <input type="text" class="form-control w-100" id="exam_name" name="exam_name" required placeholder="" value="<?php echo htmlspecialchars($exam_name); ?>">
+                                 </div>
+                                 <div class="col-md-3">
+                                     <span class="form-label required d-block mb-1">Exam Date</span>
+                                     <div class="custom-date-container d-flex align-items-center gap-1" data-target-id="exam_date">
+                                         <input type="text" class="form-control text-center date-part-year" placeholder="YYYY" maxlength="4" style="width: 75px;" required>
+                                         <span class="text-muted">/</span>
+                                         <input type="text" class="form-control text-center date-part-month" placeholder="MM" maxlength="2" style="width: 50px;" required>
+                                         <span class="text-muted">/</span>
+                                         <input type="text" class="form-control text-center date-part-day" placeholder="DD" maxlength="2" style="width: 50px;" required>
+                                      </div>
+                                      <input type="hidden" id="exam_date" name="exam_date" value="<?php echo htmlspecialchars($exam_date); ?>">
+                                  </div>
+                             </div>
                             <div class="mt-3 text-end">
                                 <button type="submit" class="btn btn-accent px-4 py-2">
                                     <i class="bi bi-people-fill me-1"></i>Load Students
@@ -283,9 +290,9 @@ include 'header.php';
                                                                 <option value="Pending" selected>Pending</option>
                                                             </select>
                                                         </td>
-                                                        <td>
-                                                            <input type="number" class="form-control form-control-sm w-100" name="mark[<?php echo $s['id']; ?>]" min="0" max="100" step="0.01" placeholder="e.g. 85.50">
-                                                        </td>
+                                                         <td>
+                                                             <input type="number" class="form-control form-control-sm w-100" name="mark[<?php echo $s['id']; ?>]" min="0" max="100" step="0.01" placeholder="">
+                                                         </td>
                                                     </tr>
                                                 <?php endforeach; ?>
                                             </tbody>
@@ -308,4 +315,93 @@ include 'header.php';
 
     <!-- Bootstrap 5 Bundle JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Sync helper functions
+            const syncHiddenToUI = (hiddenInput) => {
+                const container = document.querySelector(`.custom-date-container[data-target-id="${hiddenInput.id}"]`);
+                if (!container) return;
+                const val = hiddenInput.value || '';
+                const parts = val.split('-');
+                if (parts.length === 3) {
+                    container.querySelector('.date-part-year').value = parts[0];
+                    container.querySelector('.date-part-month').value = parts[1];
+                    container.querySelector('.date-part-day').value = parts[2];
+                } else {
+                    container.querySelector('.date-part-year').value = '';
+                    container.querySelector('.date-part-month').value = '';
+                    container.querySelector('.date-part-day').value = '';
+                }
+            };
+
+            const syncUIToHidden = (container) => {
+                const targetId = container.getAttribute('data-target-id');
+                const hiddenInput = document.getElementById(targetId);
+                const y = container.querySelector('.date-part-year').value.trim();
+                const m = container.querySelector('.date-part-month').value.trim();
+                const d = container.querySelector('.date-part-day').value.trim();
+                if (y && m && d) {
+                    hiddenInput.value = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+                } else {
+                    hiddenInput.value = '';
+                }
+            };
+
+            // Setup Date component logic
+            document.querySelectorAll('.custom-date-container').forEach(container => {
+                const yInput = container.querySelector('.date-part-year');
+                const mInput = container.querySelector('.date-part-month');
+                const dInput = container.querySelector('.date-part-day');
+
+                yInput.addEventListener('input', () => {
+                    yInput.value = yInput.value.replace(/\D/g, '');
+                    if (yInput.value.length === 4) {
+                        mInput.focus();
+                    }
+                    syncUIToHidden(container);
+                });
+
+                mInput.addEventListener('input', () => {
+                    mInput.value = mInput.value.replace(/\D/g, '');
+                    if (mInput.value.length === 2) {
+                        dInput.focus();
+                    }
+                    syncUIToHidden(container);
+                });
+
+                dInput.addEventListener('input', () => {
+                    dInput.value = dInput.value.replace(/\D/g, '');
+                    syncUIToHidden(container);
+                });
+
+                mInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Backspace' && !mInput.value) {
+                        yInput.focus();
+                    }
+                });
+
+                dInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Backspace' && !dInput.value) {
+                        mInput.focus();
+                    }
+                });
+
+                [mInput, dInput].forEach(input => {
+                    input.addEventListener('blur', () => {
+                        if (input.value && input.value.length === 1) {
+                            input.value = input.value.padStart(2, '0');
+                        }
+                        syncUIToHidden(container);
+                    });
+                });
+            });
+
+            // Initialize inputs from hidden inputs
+            document.querySelectorAll('input[type="hidden"]').forEach(hidden => {
+                if (hidden.id === 'exam_date') {
+                    syncHiddenToUI(hidden);
+                }
+            });
+        });
+    </script>
 <?php include 'footer.php'; ?>
