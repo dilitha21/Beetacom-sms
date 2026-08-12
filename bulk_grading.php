@@ -161,6 +161,19 @@ ob_start();
             border: 1px solid rgba(239, 68, 68, 0.25);
             color: #ef4444;
             border-radius: 8px;
+        
+        /* Prevent bootstrap validation from showing green on valid inputs */
+        .was-validated .form-control:valid,
+        .was-validated .form-select:valid,
+        .was-validated .custom-date-container input:valid {
+            border-color: var(--border-color) !important;
+            background-image: none !important;
+            box-shadow: none !important;
+        }
+        .was-validated .form-control:valid:focus,
+        .was-validated .form-select:valid:focus {
+            border-color: var(--primary) !important;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2) !important;
         }
     </style>
 <?php
@@ -210,7 +223,7 @@ include 'header.php';
                                 </div>
                                  <div class="col-md-2">
                                      <label for="batch_year" class="form-label required">Year</label>
-                                     <input type="text" class="form-control w-100" id="batch_year" name="batch_year" maxlength="2" pattern="\d{2}" placeholder="" required value="<?php echo htmlspecialchars($batch_year); ?>" autocomplete="off">
+                                     <input type="text" class="form-control w-100" id="batch_year" name="batch_year" maxlength="2" pattern="\d{2}" placeholder="e.g. 26" required value="<?php echo htmlspecialchars($batch_year); ?>" autocomplete="off">
                                  </div>
                                  <div class="col-md-3">
                                      <label for="exam_name" class="form-label required">Exam Name</label>
