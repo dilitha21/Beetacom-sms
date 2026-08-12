@@ -489,7 +489,7 @@ include 'header.php';
                                     <label for="is_nvq" class="form-label required">Type</label>
                                     <select class="form-select" id="is_nvq" name="is_nvq" required>
                                         <option value="" disabled <?php echo ($f_is_nvq === '') ? 'selected' : ''; ?>>Type</option>
-                                        <option value="N" <?php echo ($f_is_nvq === 'N') ? 'selected' : ''; ?>>N (NVQ)</option>
+                                        <option value="N" <?php echo ($f_is_nvq === 'N') ? 'selected' : ''; ?>>NVQ</option>
                                     </select>
                                 </div>
                                 <div class="col-md-2">
